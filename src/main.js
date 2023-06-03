@@ -25,10 +25,6 @@ async function fetchNextDeparture() {
   const metrosRightDirection = metros.filter(
     (metroDeparture) => metroDeparture.JourneyDirection === JOURNEY_DIRECTION
   );
-  // console.log(
-  //   "next expected departures",
-  //   metrosRightDirection.map((dep) => dep.ExpectedDateTime)
-  // );
   return metrosRightDirection;
 }
 
@@ -46,12 +42,13 @@ fetchNextDeparture()
       .map((d) => ({
         ...d,
         canMakeIt: d.expectedInSeconds / WALK_TIME_SECONDS,
+        canMakeItPow: Math.pow(d.expectedInSeconds / WALK_TIME_SECONDS, 2),
       }));
     // console.log(departuresWithSeconds);
-    const realisticDepartues = departuresWithSeconds.filter(
-      (d) => WALK_TIME_SECONDS - d.expectedInSeconds >= -30
+    const realisticDepartures = departuresWithSeconds.filter(
+      (d) => d.expectedInSeconds - WALK_TIME_SECONDS >= -30
     );
-    realisticDepartues.forEach((departure) => {
+    realisticDepartures.forEach((departure) => {
       const timeTableTime = departure.TimeTabledDateTime;
       const expectedTime = departure.ExpectedDateTime;
       const minutesLate = Math.round(
@@ -66,7 +63,7 @@ fetchNextDeparture()
       const timeMinutes = dayjs(expectedTime).fromNow();
       console.log(
         `Upcoming departure: ${timeMinutes} (${Math.round(
-          departure.canMakeIt * 100
+          departure.canMakeItPow * 100
         )}% chance to make it) ${minutesLateStr}`
       );
     });
