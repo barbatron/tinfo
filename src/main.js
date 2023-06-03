@@ -61,7 +61,12 @@ fetchNextDeparture()
 
     realisticDepartures.forEach((departure) => {
       const expectedTime = departure.ExpectedDateTime;
-      const hurryStr = departure.successProbPow < 1 ? "!!!" : "   ";
+      const hurryStr =
+        departure.successProbPow < 1
+          ? departure.successProb < 0
+            ? "..."
+            : "!!!"
+          : "   ";
       const timeMinutes = dayjs(expectedTime).fromNow();
       console.log(
         `${hurryStr} ${departure.Destination}: ${timeMinutes} (${Math.round(
