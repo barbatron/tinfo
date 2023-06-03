@@ -7,8 +7,10 @@ dayjs.extend(relativeTime);
 const REALTIME_API_KEY = process.env.SL_REALTIME_API_KEY;
 const SITE_ID = process.env.SL_SITE_ID;
 const JOURNEY_DIRECTION = Number(process.env.SL_JOURNEY_DIRECTION);
-const TIME_WINDOW_MINUTES = 20;
-const WALK_TIME_SECONDS = 5 * 60;
+const TIME_WINDOW_MINUTES = Number(process.env.TIME_WINDOW_MINUTES || 20);
+
+const WALK_TIME_SECONDS = Number(process.env.WALK_TIME_SECONDS || 300);
+const RUSH_SECONDS_GAINED = Number(process.env.RUSH_SECONDS_GAINED || 90);
 
 async function fetchNextDeparture() {
   const url = new URL("https://api.sl.se/api2/realtimedeparturesV4.json");
@@ -23,49 +25,48 @@ async function fetchNextDeparture() {
 
   const metros = data.ResponseData.Metros;
   const metrosRightDirection = metros.filter(
-    (metroDeparture) => metroDeparture.JourneyDirection === JOURNEY_DIRECTION
+    (metroDeparture) =>
+      isNaN(JOURNEY_DIRECTION) ||
+      metroDeparture.JourneyDirection === JOURNEY_DIRECTION
   );
   return metrosRightDirection;
 }
 
+const decorateDepartures = (departures) =>
+  (departures ?? {})
+    .map((d) => ({
+      ...d,
+      expectedInSeconds: dayjs(d.ExpectedDateTime).diff(new Date(), "seconds"),
+      scheduleDriftSeconds: dayjs(d.ExpectedDateTime).diff(
+        d.TimeTabledDateTime,
+        "seconds"
+      ),
+    }))
+    .map((d) => ({
+      ...d,
+      secondsToSpare: d.expectedInSeconds - WALK_TIME_SECONDS,
+      successProb: d.expectedInSeconds / WALK_TIME_SECONDS,
+    }))
+    .map((d) => ({
+      ...d,
+      successProbPow: Math.pow(d.successProb, 2),
+      canMakeIt: d.secondsToSpare >= -RUSH_SECONDS_GAINED,
+    }));
+
 fetchNextDeparture()
+  .then(decorateDepartures)
   .then((departures) => {
     if (!departures.length) return;
-    const departuresWithSeconds = departures
-      .map((d) => ({
-        ...d,
-        expectedInSeconds: dayjs(d.ExpectedDateTime).diff(
-          new Date(),
-          "seconds"
-        ),
-      }))
-      .map((d) => ({
-        ...d,
-        canMakeIt: d.expectedInSeconds / WALK_TIME_SECONDS,
-        canMakeItPow: Math.pow(d.expectedInSeconds / WALK_TIME_SECONDS, 2),
-      }));
-    // console.log(departuresWithSeconds);
-    const realisticDepartures = departuresWithSeconds.filter(
-      (d) => d.expectedInSeconds - WALK_TIME_SECONDS >= -60
-    );
+    const realisticDepartures = departures; //.filter((d) => d.canMakeIt);
+
     realisticDepartures.forEach((departure) => {
-      const timeTableTime = departure.TimeTabledDateTime;
       const expectedTime = departure.ExpectedDateTime;
-      const minutesLate = Math.round(
-        dayjs(timeTableTime).diff(expectedTime, "minutes")
-      );
-      const minutesLateStr =
-        minutesLate >= 1
-          ? ` (${minutesLate} min late)`
-          : minutesLate < 0
-          ? ` (${Math.abs(minutesLate)} min early)`
-          : "";
-      const hurryStr = departure.canMakeItPow < 1 ? " (hurry!)" : "";
+      const hurryStr = departure.successProbPow < 1 ? "!!!" : "   ";
       const timeMinutes = dayjs(expectedTime).fromNow();
       console.log(
-        `Upcoming departure: ${timeMinutes} (${Math.round(
-          departure.canMakeItPow * 100
-        )}% chance to make it)${hurryStr}${minutesLateStr}`
+        `${hurryStr} ${departure.Destination}: ${timeMinutes} (${Math.round(
+          departure.successProbPow * 100
+        )}% chance to make it)`
       );
     });
   })
