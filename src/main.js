@@ -46,7 +46,7 @@ fetchNextDeparture()
       }));
     // console.log(departuresWithSeconds);
     const realisticDepartures = departuresWithSeconds.filter(
-      (d) => d.expectedInSeconds - WALK_TIME_SECONDS >= -30
+      (d) => d.expectedInSeconds - WALK_TIME_SECONDS >= -60
     );
     realisticDepartures.forEach((departure) => {
       const timeTableTime = departure.TimeTabledDateTime;
@@ -56,15 +56,16 @@ fetchNextDeparture()
       );
       const minutesLateStr =
         minutesLate >= 1
-          ? `(${minutesLate} min late)`
+          ? ` (${minutesLate} min late)`
           : minutesLate < 0
-          ? `(${Math.abs(minutesLate)} min early)`
+          ? ` (${Math.abs(minutesLate)} min early)`
           : "";
+      const hurryStr = departure.canMakeItPow < 1 ? " (hurry!)" : "";
       const timeMinutes = dayjs(expectedTime).fromNow();
       console.log(
         `Upcoming departure: ${timeMinutes} (${Math.round(
           departure.canMakeItPow * 100
-        )}% chance to make it) ${minutesLateStr}`
+        )}% chance to make it)${hurryStr}${minutesLateStr}`
       );
     });
   })
