@@ -80,7 +80,7 @@ const updateDepartures = () =>
   fetchNextDeparture()
     .then((d) => {
       departuresRaw = [...d];
-      console.log("Updated departures", departuresRaw);
+      console.log("Updated departures", decorateDepartures(departuresRaw));
     })
     .catch((err) => {
       console.error("updateDepartures failed", err);
