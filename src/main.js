@@ -1,84 +1,20 @@
 const express = require("express");
-const app = express();
+const index = require("./html-template");
 
 require("dotenv").config();
-
-// Time settings
+require("./dayjs");
 const dayjs = require("dayjs");
-var relativeTime = require("dayjs/plugin/relativeTime");
-dayjs.extend(relativeTime);
-var updateLocale = require("dayjs/plugin/updateLocale");
-dayjs.extend(updateLocale);
 
-dayjs.updateLocale("en", {
-  relativeTime: {
-    future: "in %s",
-    past: "%s ago",
-    s: "a few seconds",
-    m: "a minute",
-    mm: "%d min",
-    h: "an h",
-    hh: "%d hrs",
-    d: "a day",
-    dd: "%d days",
-    M: "a month",
-    MM: "%d months",
-    y: "a year",
-    yy: "%d years",
-  },
-});
-
-// Config
-const REALTIME_API_KEY = process.env.SL_REALTIME_API_KEY;
-const SITE_ID = process.env.SL_SITE_ID;
-const JOURNEY_DIRECTION = Number(process.env.SL_JOURNEY_DIRECTION);
-const TIME_WINDOW_MINUTES = Number(process.env.TIME_WINDOW_MINUTES || 20);
-const FETCH_INTERVAL_MS = Number(process.env.FETCH_INTERVAL_MS || 15000);
-const REFRESH_INTERVAL_MS = Number(process.env.REFRESH_INTERVAL_MS || 5000);
-
-const WALK_TIME_SECONDS = Number(process.env.WALK_TIME_SECONDS || 300);
-const RUSH_SECONDS_GAINED = Number(process.env.RUSH_SECONDS_GAINED || 90);
-
-const index = `
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>SL Hökis</title>
-    
-  </head>
-  <body>
-    <div id="content" ></div>
-    <script>
-      function loadContent() { 
-        fetch('/content')
-          .then(function (response) { 
-            return response.text();
-          })
-          .catch(function (err) {
-            return '<pre>' + err.toString() + '</pre>';
-          })
-          .then(function (html) {
-            document.getElementById('content').innerHTML = html;
-          })
-      }
-      setInterval(loadContent, 5000);
-      loadContent();
-    </script>
-  </body>
-</html>
-`;
-
-console.log("CONFIG", {
-  JOURNEY_DIRECTION,
+const {
+  REALTIME_API_KEY,
+  SITE_ID,
   TIME_WINDOW_MINUTES,
   FETCH_INTERVAL_MS,
-  REFRESH_INTERVAL_MS,
   WALK_TIME_SECONDS,
   RUSH_SECONDS_GAINED,
-});
+} = require("./config");
+
+const app = express();
 
 async function fetchNextDeparture() {
   const url = new URL("https://api.sl.se/api2/realtimedeparturesV4.json");
@@ -186,40 +122,6 @@ const render = () => {
 
 setInterval(() => updateDepartures().catch(console.error), FETCH_INTERVAL_MS);
 void updateDepartures().catch(console.error);
-
-const scrollScript = `
-(function() {
-    
-  var browser = window,
-      doc = browser.document;
-
-  // If there's a hash, or addEventListener is undefined, stop here
-  if ( !location.hash || !browser.addEventListener ) {
-
-    //set to 1
-    window.scrollTo( 0, 1 );
-    var scrollTop = 1,
-
-    //reset to 0 if needed
-    checkWindowBody = setInterval(function(){
-      if( doc.body ){
-        clearInterval( checkWindowBody );
-        scrollTop = "scrollTop" in doc.body ? doc.body.scrollTop : 1;
-        browser.scrollTo( 0, scrollTop === 1 ? 0 : 1 );
-      } 
-    }, 15 );
-
-    if (browser.addEventListener) {
-      browser.addEventListener("load", function(){
-        setTimeout(function(){
-          //reset to hide address
-          browser.scrollTo( 0, scrollTop === 1 ? 0 : 1 );
-        }, 0);
-      }, false );
-    }
-  }
-
-})();`;
 
 // respond with "hello world" when a GET request is made to the homepage
 app.get("/", (req, res) => {
