@@ -1,5 +1,9 @@
+const express = require("express");
+const app = express();
+
 require("dotenv").config();
 
+// Time settings
 const dayjs = require("dayjs");
 var relativeTime = require("dayjs/plugin/relativeTime");
 dayjs.extend(relativeTime);
@@ -23,6 +27,8 @@ dayjs.updateLocale("en", {
     yy: "%d years",
   },
 });
+
+// Config
 const REALTIME_API_KEY = process.env.SL_REALTIME_API_KEY;
 const SITE_ID = process.env.SL_SITE_ID;
 const JOURNEY_DIRECTION = Number(process.env.SL_JOURNEY_DIRECTION);
@@ -32,6 +38,38 @@ const REFRESH_INTERVAL_MS = Number(process.env.REFRESH_INTERVAL_MS || 5000);
 
 const WALK_TIME_SECONDS = Number(process.env.WALK_TIME_SECONDS || 300);
 const RUSH_SECONDS_GAINED = Number(process.env.RUSH_SECONDS_GAINED || 90);
+
+const index = `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>SL Hökis</title>
+    
+  </head>
+  <body>
+    <div id="content" ></div>
+    <script>
+      function loadContent() { 
+        fetch('/content')
+          .then(function (response) { 
+            return response.text();
+          })
+          .catch(function (err) {
+            return '<pre>' + err.toString() + '</pre>';
+          })
+          .then(function (html) {
+            document.getElementById('content').innerHTML = html;
+          })
+      }
+      setInterval(loadContent, 5000);
+      loadContent();
+    </script>
+  </body>
+</html>
+`;
 
 console.log("CONFIG", {
   JOURNEY_DIRECTION,
@@ -140,21 +178,58 @@ const render = () => {
   // );
   const arrJoinApply = topLevelLines.join(`<br/>`);
   return (
-    '<div style="display: block; font-size: 35px;">' + arrJoinApply + "</div>"
+    '<div style="display: block; height: 100vh; font-size: 35px;">' +
+    arrJoinApply +
+    "</div>"
   );
 };
 
 setInterval(() => updateDepartures().catch(console.error), FETCH_INTERVAL_MS);
 void updateDepartures().catch(console.error);
 
-const express = require("express");
-const app = express();
+const scrollScript = `
+(function() {
+    
+  var browser = window,
+      doc = browser.document;
+
+  // If there's a hash, or addEventListener is undefined, stop here
+  if ( !location.hash || !browser.addEventListener ) {
+
+    //set to 1
+    window.scrollTo( 0, 1 );
+    var scrollTop = 1,
+
+    //reset to 0 if needed
+    checkWindowBody = setInterval(function(){
+      if( doc.body ){
+        clearInterval( checkWindowBody );
+        scrollTop = "scrollTop" in doc.body ? doc.body.scrollTop : 1;
+        browser.scrollTo( 0, scrollTop === 1 ? 0 : 1 );
+      } 
+    }, 15 );
+
+    if (browser.addEventListener) {
+      browser.addEventListener("load", function(){
+        setTimeout(function(){
+          //reset to hide address
+          browser.scrollTo( 0, scrollTop === 1 ? 0 : 1 );
+        }, 0);
+      }, false );
+    }
+  }
+
+})();`;
 
 // respond with "hello world" when a GET request is made to the homepage
 app.get("/", (req, res) => {
-  // console.log("GET /");
-  const refreshScript = `<script>setInterval(() => window.location.reload(), ${REFRESH_INTERVAL_MS});</script>`;
-  res.send(render() + refreshScript /*+ "<br/>" + new Date().toISOString()*/);
+  console.log("GET /", req.headers["user-agent"]);
+  res.setHeader("Content-Type", "text/html; charset=utf-8").send(index);
+});
+
+app.get("/content", (req, res) => {
+  console.log("GET /content", req.headers["user-agent"]);
+  res.setHeader("Content-Type", "text/html").send(render());
 });
 
 const port = process.env.PORT || 8000;
