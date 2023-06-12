@@ -82,9 +82,9 @@ let metrosCache = {};
 const updateDepartures = () =>
   fetchNextDeparture()
     .then((metros) => {
-      console.log("all metros", metros);
+      // console.log("all metros", metros);
       metrosCache = [...metros];
-      console.log("Updated metros", decorateDepartures(metros));
+      // console.log("Updated metros", decorateDepartures(metros));
     })
     .catch((err) => {
       console.error("updateDepartures failed", err);
@@ -106,7 +106,7 @@ const render = () => {
   }, new Map());
 
   const renderDirection = (departures) => {
-    console.log(`renderDict`, { departures });
+    // console.log(`renderDict`, { departures });
     if (!departures.length)
       return [`(none for  ${TIME_WINDOW_MINUTES} minutes)`];
     const realisticDepartures = departures; //.filter((d) => d.canMakeIt);
@@ -126,19 +126,18 @@ const render = () => {
     return lines;
   };
 
-  console.log("keys", departuresByDirection.keys());
   const topLevelLines = Array.from(
     renderDirection(departuresByDirection.get("1") ?? []) ?? []
   );
   const otherDirection = Array.from(
     renderDirection(departuresByDirection.get("2") ?? []) ?? []
   );
-  console.log(
-    "toplevel lines",
-    topLevelLines,
-    typeof topLevelLines,
-    topLevelLines instanceof Array
-  );
+  // console.log(
+  //   "toplevel lines",
+  //   topLevelLines,
+  //   typeof topLevelLines,
+  //   topLevelLines instanceof Array
+  // );
   const arrJoinApply = topLevelLines.join(`<br/>`);
   return (
     '<div style="display: block; font-size: 35px;">' + arrJoinApply + "</div>"
@@ -153,7 +152,7 @@ const app = express();
 
 // respond with "hello world" when a GET request is made to the homepage
 app.get("/", (req, res) => {
-  console.log("GET /");
+  // console.log("GET /");
   const refreshScript = `<script>setInterval(() => window.location.reload(), ${REFRESH_INTERVAL_MS});</script>`;
   res.send(render() + refreshScript /*+ "<br/>" + new Date().toISOString()*/);
 });
