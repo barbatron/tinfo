@@ -33,6 +33,15 @@ const REFRESH_INTERVAL_MS = Number(process.env.REFRESH_INTERVAL_MS || 5000);
 const WALK_TIME_SECONDS = Number(process.env.WALK_TIME_SECONDS || 300);
 const RUSH_SECONDS_GAINED = Number(process.env.RUSH_SECONDS_GAINED || 90);
 
+console.log("CONFIG", {
+  JOURNEY_DIRECTION,
+  TIME_WINDOW_MINUTES,
+  FETCH_INTERVAL_MS,
+  REFRESH_INTERVAL_MS,
+  WALK_TIME_SECONDS,
+  RUSH_SECONDS_GAINED,
+});
+
 async function fetchNextDeparture() {
   const url = new URL("https://api.sl.se/api2/realtimedeparturesV4.json");
   url.searchParams.set("key", REALTIME_API_KEY);
@@ -43,18 +52,12 @@ async function fetchNextDeparture() {
   const response = await fetch(url);
   if (!response.ok) throw Error("Request failed");
   const data = await response.json();
-
-  const metros = data.ResponseData.Metros;
-  const metrosRightDirection = metros.filter(
-    (metroDeparture) =>
-      isNaN(JOURNEY_DIRECTION) ||
-      metroDeparture.JourneyDirection === JOURNEY_DIRECTION
-  );
-  return metrosRightDirection;
+  // console.log("fetch respponse", data.ResponseData.Metros);
+  return data.ResponseData.Metros;
 }
 
-const decorateDepartures = (departures) =>
-  (departures ?? {})
+const decorateDepartures = (departures = []) =>
+  Array.from(departures ?? [])
     .map((d) => ({
       ...d,
       expectedInSeconds: dayjs(d.ExpectedDateTime).diff(new Date(), "seconds"),
@@ -74,39 +77,72 @@ const decorateDepartures = (departures) =>
       canMakeIt: d.secondsToSpare >= -RUSH_SECONDS_GAINED,
     }));
 
-let departuresRaw = [];
+let metrosCache = {};
 
 const updateDepartures = () =>
   fetchNextDeparture()
-    .then((d) => {
-      departuresRaw = [...d];
-      console.log("Updated departures", decorateDepartures(departuresRaw));
+    .then((metros) => {
+      console.log("all metros", metros);
+      metrosCache = [...metros];
+      console.log("Updated metros", decorateDepartures(metros));
     })
     .catch((err) => {
       console.error("updateDepartures failed", err);
     });
 
 const render = () => {
-  const departures = decorateDepartures(departuresRaw);
-  if (!departures.length)
-    return `No departures within ${TIME_WINDOW_MINUTES} minutes`;
-  const realisticDepartures = departures; //.filter((d) => d.canMakeIt);
+  const decoratedDepartures = decorateDepartures(metrosCache);
+  const departuresByDirection = decoratedDepartures.reduce((map, dep) => {
+    const key = String(dep.JourneyDirection);
+    map.set(
+      key,
+      // concat into existing array
+      map.has(key)
+        ? [...map.get(key), dep]
+        : // otherwise new array with dep as 1st
+          [dep]
+    );
+    return map;
+  }, new Map());
 
-  const lines = realisticDepartures.map((departure) => {
-    const expectedTime = departure.ExpectedDateTime;
-    const hurryStr =
-      departure.successProbPow < 1
-        ? departure.successProb < 0
-          ? "😵"
-          : "😱"
-        : "👍";
-    const timeMinutes = dayjs(expectedTime).fromNow(true);
-    return `${hurryStr} ${timeMinutes} (${departure.Destination})`; /*, ${Math.round(
-      departure.successProbPow * 100
-    )}% doable)`;*/
-  });
+  const renderDirection = (departures) => {
+    console.log(`renderDict`, { departures });
+    if (!departures.length)
+      return [`(none for  ${TIME_WINDOW_MINUTES} minutes)`];
+    const realisticDepartures = departures; //.filter((d) => d.canMakeIt);
 
-  return `<span style="font-size: 35px">${lines.join("\n")}</span>`;
+    // format line strings
+    const lines = realisticDepartures.map((departure) => {
+      const expectedTime = departure.ExpectedDateTime;
+      const hurryStr =
+        departure.successProbPow < 1
+          ? departure.successProb < 0
+            ? "😵"
+            : "😱"
+          : "👍";
+      const timeMinutes = dayjs(expectedTime).fromNow(true);
+      return `${hurryStr} ${timeMinutes} (${departure.Destination})`;
+    });
+    return lines;
+  };
+
+  console.log("keys", departuresByDirection.keys());
+  const topLevelLines = Array.from(
+    renderDirection(departuresByDirection.get("1") ?? []) ?? []
+  );
+  const otherDirection = Array.from(
+    renderDirection(departuresByDirection.get("2") ?? []) ?? []
+  );
+  console.log(
+    "toplevel lines",
+    topLevelLines,
+    typeof topLevelLines,
+    topLevelLines instanceof Array
+  );
+  const arrJoinApply = topLevelLines.join(`<br/>`);
+  return (
+    '<div style="display: block; font-size: 35px;">' + arrJoinApply + "</div>"
+  );
 };
 
 setInterval(() => updateDepartures().catch(console.error), FETCH_INTERVAL_MS);
