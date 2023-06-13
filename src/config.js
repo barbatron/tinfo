@@ -9,7 +9,9 @@ const REFRESH_INTERVAL_MS = Number(process.env.REFRESH_INTERVAL_MS || 5000);
 const WALK_TIME_SECONDS = Number(process.env.WALK_TIME_SECONDS || 300);
 const RUSH_SECONDS_GAINED = Number(process.env.RUSH_SECONDS_GAINED || 90);
 
-console.log("CONFIG", {
+const { log } = require("./log");
+
+log("CONFIG", {
   JOURNEY_DIRECTION,
   TIME_WINDOW_MINUTES,
   FETCH_INTERVAL_MS,

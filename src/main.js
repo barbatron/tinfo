@@ -1,5 +1,6 @@
 const express = require("express");
 const index = require("./html-template");
+const { log } = require("./log");
 
 require("dotenv").config();
 require("./dayjs");
@@ -26,7 +27,7 @@ async function fetchNextDeparture() {
   const response = await fetch(url);
   if (!response.ok) throw Error("Request failed");
   const data = await response.json();
-  // console.log("fetch respponse", data.ResponseData.Metros);
+  // log("fetch respponse", data.ResponseData.Metros);
   return data.ResponseData.Metros;
 }
 
@@ -56,12 +57,12 @@ let metrosCache = {};
 const updateDepartures = () =>
   fetchNextDeparture()
     .then((metros) => {
-      // console.log("all metros", metros);
+      // log("all metros", metros);
       metrosCache = [...metros];
-      // console.log("Updated metros", decorateDepartures(metros));
+      log("Updated departures (#)", metros.length);
     })
     .catch((err) => {
-      console.error("updateDepartures failed", err);
+      log("error", "updateDepartures failed", err);
     });
 
 const render = () => {
@@ -80,7 +81,7 @@ const render = () => {
   }, new Map());
 
   const renderDirection = (departures) => {
-    // console.log(`renderDict`, { departures });
+    // log(`renderDict`, { departures });
     if (!departures.length)
       return [`(none for  ${TIME_WINDOW_MINUTES} minutes)`];
     const realisticDepartures = departures; //.filter((d) => d.canMakeIt);
@@ -106,7 +107,7 @@ const render = () => {
   const otherDirection = Array.from(
     renderDirection(departuresByDirection.get("2") ?? []) ?? []
   );
-  // console.log(
+  // log(
   //   "toplevel lines",
   //   topLevelLines,
   //   typeof topLevelLines,
@@ -125,15 +126,17 @@ void updateDepartures().catch(console.error);
 
 // respond with "hello world" when a GET request is made to the homepage
 app.get("/", (req, res) => {
-  console.log("GET /", req.headers["user-agent"]);
+  log("GET /", req.headers["user-agent"]);
   res.setHeader("Content-Type", "text/html; charset=utf-8").send(index);
 });
 
 app.get("/content", (req, res) => {
-  console.log("GET /content", req.headers["user-agent"]);
+  log("GET /content", req.headers["user-agent"]);
   res.setHeader("Content-Type", "text/html").send(render());
 });
 
+log("Testing settings/api access...");
+
 const port = process.env.PORT || 8000;
 app.listen(port);
-console.log("Listening on ", port);
+log("Listening on ", port);
