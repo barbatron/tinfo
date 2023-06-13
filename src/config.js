@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 // Config
 const REALTIME_API_KEY = process.env.SL_REALTIME_API_KEY;
 const SITE_ID = process.env.SL_SITE_ID;
@@ -12,6 +14,7 @@ const RUSH_SECONDS_GAINED = Number(process.env.RUSH_SECONDS_GAINED || 90);
 const { log } = require("./log");
 
 log("CONFIG", {
+  REALTIME_API_KEY,
   JOURNEY_DIRECTION,
   TIME_WINDOW_MINUTES,
   FETCH_INTERVAL_MS,

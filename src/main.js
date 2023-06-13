@@ -1,8 +1,8 @@
 const express = require("express");
+
 const index = require("./html-template");
 const { log } = require("./log");
 
-require("dotenv").config();
 require("./dayjs");
 const dayjs = require("dayjs");
 
@@ -27,8 +27,10 @@ async function fetchNextDeparture() {
 
   const response = await fetch(url);
   if (!response.ok) throw Error("Request failed");
+
   const data = await response.json();
-  // log("fetch respponse", data.ResponseData.Metros);
+  if (data.Message) throw Error(data.Message);
+  // log("fetch respponse", data);
   return data.ResponseData.Metros;
 }
 
@@ -70,6 +72,7 @@ const updateDepartures = () =>
     });
 
 const render = () => {
+  if (fetchError) throw Error(fetchError.message);
   const decoratedDepartures = decorateDepartures(metrosCache);
   const departuresByDirection = decoratedDepartures.reduce((map, dep) => {
     const key = String(dep.JourneyDirection);
@@ -136,6 +139,11 @@ app.get("/", (req, res) => {
 
 app.get("/content", (req, res) => {
   log("GET /content", req.headers["user-agent"]);
+  res.setHeader("Content-Type", "text/html");
+  if (fetchError) {
+    res.send(fetchError.message).status(500).end();
+    return;
+  }
   res.setHeader("Content-Type", "text/html").send(render());
 });
 

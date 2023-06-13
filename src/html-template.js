@@ -1,3 +1,5 @@
+const { REFRESH_INTERVAL_MS } = require("./config");
+
 const scrollScript = `
 (function() {
     
@@ -33,36 +35,44 @@ const scrollScript = `
 })();`;
 
 const index = `
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>SL Hökis</title>
-    
-  </head>
-  <body style="font-size: 65px">
-    <div id="content" ></div>
-    <script>
-      function loadContent() { 
-        fetch('/content')
-          .then(function (response) { 
-            return response.text();
-          })
-          .catch(function (err) {
-            return '<pre>' + err.toString() + '</pre>';
-          })
-          .then(function (html) {
-            document.getElementById('content').innerHTML = html;
-          })
-      }
-      setInterval(loadContent, 5000);
-      loadContent();
-      ${scrollScript}
-    </script>
-  </body>
-</html>
-`;
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="ie=edge">
+      <title>SL Hökis</title>
+      
+    </head>
+    <body style="font-size: 65px">
+      <div id="content" style="margin-bottom: 3rem"></div>
+      <pre id="error" style="color: orange; font-size: 0.4em"></div>
+      <script>
+        let errorCount = 0;
+        let errorSince = null;
+        function loadContent() { 
+          fetch('/content')
+            .then(function (response) { 
+              return response.text();
+            })
+            .then(function (html) {
+              errorCount = 0;
+              errorSince = null;
+              document.getElementById('content').innerHTML = html;
+              document.getElementById('error').innerHTML = '';
+            })
+            .catch(function (err) {
+              if (errorCount === 0) errorSince = new Date();
+              errorCount++;
+              document.getElementById('error').innerHTML = '<pre>(' + errorCount + ') ' + err.message + '<br/>' + errorSince.toTimeString() + '</pre>';
+            })
+        }
+        setInterval(loadContent, ${REFRESH_INTERVAL_MS});
+        loadContent(); 
+        
+      </script>
+    </body>
+  </html>
+  `;
 
 module.exports = index;

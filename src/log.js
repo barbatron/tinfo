@@ -4,7 +4,7 @@ const log = (...args) => {
   const logFn = hasLevelArg ? console[args[0]] : console.log;
   const logArgs = hasLevelArg ? args.slice(1) : args;
 
-  logFn.apply(console, [new Date().toISOString(), ...logArgs]);
+  logFn.apply(console, [new Date().toTimeString(), ...logArgs]);
 };
 
 module.exports = { log };
