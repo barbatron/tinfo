@@ -1,7 +1,7 @@
 // Config
 const REALTIME_API_KEY = process.env.SL_REALTIME_API_KEY;
 const SITE_ID = process.env.SL_SITE_ID;
-const JOURNEY_DIRECTION = Number(process.env.SL_JOURNEY_DIRECTION);
+const JOURNEY_DIRECTION = process.env.SL_JOURNEY_DIRECTION;
 const TIME_WINDOW_MINUTES = Number(process.env.TIME_WINDOW_MINUTES || 20);
 const FETCH_INTERVAL_MS = Number(process.env.FETCH_INTERVAL_MS || 15000);
 const REFRESH_INTERVAL_MS = Number(process.env.REFRESH_INTERVAL_MS || 5000);

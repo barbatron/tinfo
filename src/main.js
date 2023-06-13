@@ -13,6 +13,7 @@ const {
   FETCH_INTERVAL_MS,
   WALK_TIME_SECONDS,
   RUSH_SECONDS_GAINED,
+  JOURNEY_DIRECTION,
 } = require("./config");
 
 const app = express();
@@ -53,15 +54,18 @@ const decorateDepartures = (departures = []) =>
     }));
 
 let metrosCache = {};
+let fetchError = null;
 
 const updateDepartures = () =>
   fetchNextDeparture()
     .then((metros) => {
       // log("all metros", metros);
       metrosCache = [...metros];
+      fetchError = undefined;
       log("Updated departures (#)", metros.length);
     })
     .catch((err) => {
+      fetchError = err;
       log("error", "updateDepartures failed", err);
     });
 
@@ -102,21 +106,21 @@ const render = () => {
   };
 
   const topLevelLines = Array.from(
-    renderDirection(departuresByDirection.get("1") ?? []) ?? []
+    renderDirection(departuresByDirection.get(JOURNEY_DIRECTION) ?? []) ?? []
   );
-  const otherDirection = Array.from(
-    renderDirection(departuresByDirection.get("2") ?? []) ?? []
+  const otherDirections = Array.from(
+    renderDirection(
+      Array.from(departuresByDirection.entries())
+        .filter(([k]) => k !== String(JOURNEY_DIRECTION))
+        .flatMap(([, v]) => v) ?? []
+    ) ?? []
   );
-  // log(
-  //   "toplevel lines",
-  //   topLevelLines,
-  //   typeof topLevelLines,
-  //   topLevelLines instanceof Array
-  // );
-  const arrJoinApply = topLevelLines.join(`<br/>`);
   return (
-    '<div style="display: block; height: 100vh; font-size: 35px;">' +
-    arrJoinApply +
+    '<div style="display: block; margin-bottom: 3rem">' +
+    topLevelLines.join(`<br/>`) +
+    "</div>" +
+    '<div style="display: block; margin-bottom: 3rem; opacity: 0.3">' +
+    otherDirections.join(`<br/>`) +
     "</div>"
   );
 };

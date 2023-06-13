@@ -42,7 +42,7 @@ const index = `
     <title>SL Hökis</title>
     
   </head>
-  <body>
+  <body style="font-size: 65px">
     <div id="content" ></div>
     <script>
       function loadContent() { 
