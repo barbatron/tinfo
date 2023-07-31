@@ -14,6 +14,9 @@ const {
   WALK_TIME_SECONDS,
   RUSH_SECONDS_GAINED,
   JOURNEY_DIRECTION,
+  STATION_NAME_REPLACEMENTS,
+  DEST_NAME_OPACITY,
+  DEST_BLOCK_MARGIN_BOT,
 } = require("./config");
 
 const app = express();
@@ -101,9 +104,12 @@ const render = () => {
           ? departure.successProb < 0
             ? "😵"
             : "😱"
-          : "👍";
+          : "✨";
       const timeMinutes = dayjs(expectedTime).fromNow(true);
-      return `${hurryStr} ${timeMinutes} (${departure.Destination})`;
+      const destStr =
+        STATION_NAME_REPLACEMENTS.get(departure.Destination) ??
+        departure.Destination;
+      return `${hurryStr} ${timeMinutes} <span style="opacity: ${DEST_NAME_OPACITY}">${destStr}</span>`;
     });
     return lines;
   };
@@ -118,14 +124,16 @@ const render = () => {
         .flatMap(([, v]) => v) ?? []
     ) ?? []
   );
-  return (
-    '<div style="display: block; margin-bottom: 3rem">' +
+  const topLevelLinesHtml =
+    `<div style="display: block; margin-bottom: ${DEST_BLOCK_MARGIN_BOT}; white-space: nowrap">` +
     topLevelLines.join(`<br/>`) +
-    "</div>" +
-    '<div style="display: block; margin-bottom: 3rem; opacity: 0.3">' +
-    otherDirections.join(`<br/>`) +
-    "</div>"
-  );
+    "</div>";
+  const otherDirectionsHtml = departuresByDirection.entries().length
+    ? '<div style="display: block; margin-bottom: 3rem; opacity: 0.3">' +
+      otherDirections.join(`<br/>`) +
+      "</div>"
+    : "";
+  return topLevelLinesHtml + "\n" + otherDirectionsHtml;
 };
 
 setInterval(() => updateDepartures().catch(console.error), FETCH_INTERVAL_MS);

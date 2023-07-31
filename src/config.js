@@ -11,6 +11,14 @@ const REFRESH_INTERVAL_MS = Number(process.env.REFRESH_INTERVAL_MS || 5000);
 const WALK_TIME_SECONDS = Number(process.env.WALK_TIME_SECONDS || 300);
 const RUSH_SECONDS_GAINED = Number(process.env.RUSH_SECONDS_GAINED || 90);
 
+const STATION_NAME_REPLACEMENTS = new Map([
+  ["Hässelby strand", "Hässelby str"],
+]);
+
+const DEST_FONT_SIZE = "45px";
+const DEST_NAME_OPACITY = "0.25";
+const DEST_BLOCK_MARGIN_BOT = "2.5rem";
+
 const { log } = require("./log");
 
 log("CONFIG", {
@@ -32,4 +40,8 @@ module.exports = {
   REFRESH_INTERVAL_MS,
   WALK_TIME_SECONDS,
   RUSH_SECONDS_GAINED,
+  STATION_NAME_REPLACEMENTS,
+  DEST_FONT_SIZE,
+  DEST_NAME_OPACITY,
+  DEST_BLOCK_MARGIN_BOT,
 };

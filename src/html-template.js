@@ -1,4 +1,4 @@
-const { REFRESH_INTERVAL_MS } = require("./config");
+const { REFRESH_INTERVAL_MS, DEST_FONT_SIZE } = require("./config");
 
 const scrollScript = `
 (function() {
@@ -44,8 +44,8 @@ const index = `
       <title>SL Hökis</title>
       
     </head>
-    <body style="font-size: 65px">
-      <div id="content" style="margin-bottom: 3rem"></div>
+    <body style="font-size: ${DEST_FONT_SIZE}">
+      <div id="content" style="margin-bottom: 3rem; text-wrap: nowrap;"></div>
       <pre id="error" style="color: orange; font-size: 0.4em"></div>
       <script>
         let errorCount = 0;
