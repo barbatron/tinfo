@@ -44,18 +44,19 @@ const index = `
       <style>
         body {
           font-family: 'Trebuchet MS', sans-serif;
-          font-size: ${DEST_FONT_SIZE}; 
+          font-size: ${DEST_FONT_SIZE};
           background-color: #483B38; 
           color: white;
-          height: 100vvh;
+          height: 100vh;
         }
 
         #content {
+          height: 100%;
           margin-bottom: 3rem; 
           text-wrap: nowrap; 
           display: flex; 
           flex-direction: column;
-          justify-content: center; 
+          justify-content: center;
           align-items: center;
         }
 
@@ -73,13 +74,23 @@ const index = `
         let errorCount = 0;
         let errorSince = null;
         let knownServerVer;
+        let refreshAt = null;
 
         function loadContent() { 
           const headers = !!knownServerVer ? { ['x-server-version']: knownServerVer } : {}
-          fetch('/content', { headers })
+          
+          const updatePromise = fetch('/content', { headers })
             .then(function (response) {
+              // Handle redirect
               if (response.redirected) { window.location.reload(); }
-              knownServerVer = response.headers.get('x-server-version')
+              
+              // Update known server version
+              knownServerVer = response.headers.get('x-server-version');
+
+              // Update next reload time
+              refreshAt = response.headers.get('x-refresh-at') || -1;
+
+              // Extract html as text
               return response.text();
             })
             .then(function (html) {
@@ -95,11 +106,9 @@ const index = `
             })
         }
 
-        // Disabled to avoid running a bunch of JS in the background, saving battery?
-        // setInterval(loadContent, ${REFRESH_INTERVAL_MS}); 
-
         loadContent(); 
         
+        ${scrollScript}
       </script>
     </body>
   </html>

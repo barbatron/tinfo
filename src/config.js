@@ -15,7 +15,7 @@ const STATION_NAME_REPLACEMENTS = new Map([
   ["Hässelby strand", "Hässelby str"],
 ]);
 
-const DEST_FONT_SIZE = "45px";
+const DEST_FONT_SIZE = "45pt";
 const DEST_NAME_OPACITY = "0.25";
 const DEST_BLOCK_MARGIN_BOT = "2.5rem";
 
