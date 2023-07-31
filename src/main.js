@@ -186,3 +186,8 @@ log("Testing settings/api access...");
 const port = process.env.PORT || 8000;
 app.listen(port);
 log("Listening on ", port);
+
+process.on("SIGINT", function () {
+  console.log("Caught interrupt signal");
+  process.exit();
+});
