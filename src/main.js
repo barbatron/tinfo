@@ -20,6 +20,7 @@ const {
 } = require("./config");
 
 const app = express();
+const startTime = new Date();
 
 async function fetchNextDeparture() {
   const url = new URL("https://api.sl.se/api2/realtimedeparturesV4.json");
@@ -139,15 +140,38 @@ const render = () => {
 setInterval(() => updateDepartures().catch(console.error), FETCH_INTERVAL_MS);
 void updateDepartures().catch(console.error);
 
+const getServerVersion = () => startTime.valueOf().toString();
+
+const checkVersionMiddleware = (req, res, next) => {
+  const clientsServerVersion = req.headers["x-server-version"];
+  if (!clientsServerVersion) {
+    console.log("No x-server-version in client request - welcome!");
+    next();
+    return;
+  }
+
+  const serverVersion = getServerVersion();
+  if (serverVersion !== clientsServerVersion) {
+    console.log("Client vs Server version mismatch - redirecting", {
+      clientsServerVersion,
+      startTime,
+    });
+    res.redirect(301, "/");
+    return;
+  }
+  next();
+};
+
 // respond with "hello world" when a GET request is made to the homepage
 app.get("/", (req, res) => {
   log("GET /", req.headers["user-agent"]);
   res.setHeader("Content-Type", "text/html; charset=utf-8").send(index);
 });
 
-app.get("/content", (req, res) => {
+app.get("/content", checkVersionMiddleware, (req, res) => {
   log("GET /content", req.headers["user-agent"]);
   res.setHeader("Content-Type", "text/html");
+  res.setHeader("x-server-version", getServerVersion());
   if (fetchError) {
     res.send(fetchError.message).status(500).end();
     return;

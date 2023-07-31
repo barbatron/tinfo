@@ -31,7 +31,6 @@ const scrollScript = `
       }, false );
     }
   }
-
 })();`;
 
 const index = `
@@ -50,9 +49,13 @@ const index = `
       <script>
         let errorCount = 0;
         let errorSince = null;
+        let knownServerVer;
         function loadContent() { 
-          fetch('/content')
-            .then(function (response) { 
+          const headers = !!knownServerVer ? { ['x-server-version']: knownServerVer } : {}
+          fetch('/content', { headers })
+            .then(function (response) {
+              if (response.redirected) { window.location.reload(); }
+              knownServerVer = response.headers.get('x-server-version')
               return response.text();
             })
             .then(function (html) {
