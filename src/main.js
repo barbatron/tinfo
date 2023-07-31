@@ -154,19 +154,15 @@ const checkVersionMiddleware = (req, res, next) => {
   if (serverVersion !== clientsServerVersion) {
     console.log("Client vs Server version mismatch - redirecting", {
       clientsServerVersion,
-      startTime,
+      serverVersion,
     });
-    res.redirect(301, "/");
+
+    res.set("location", "/");
+    res.status(302).send();
     return;
   }
   next();
 };
-
-// respond with "hello world" when a GET request is made to the homepage
-app.get("/", (req, res) => {
-  log("GET /", req.headers["user-agent"]);
-  res.setHeader("Content-Type", "text/html; charset=utf-8").send(index);
-});
 
 app.get("/content", checkVersionMiddleware, (req, res) => {
   log("GET /content", req.headers["user-agent"]);
@@ -177,6 +173,12 @@ app.get("/content", checkVersionMiddleware, (req, res) => {
     return;
   }
   res.setHeader("Content-Type", "text/html").send(render());
+});
+
+// respond with "hello world" when a GET request is made to the homepage
+app.get("/", (req, res) => {
+  log("GET /", req.headers["user-agent"]);
+  res.setHeader("Content-Type", "text/html; charset=utf-8").send(index);
 });
 
 log("Testing settings/api access...");
