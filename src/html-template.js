@@ -43,8 +43,8 @@ const index = `
       <title>SL Hökis</title>
       
     </head>
-    <body style="font-size: ${DEST_FONT_SIZE}">
-      <div id="content" style="margin-bottom: 3rem; text-wrap: nowrap;"></div>
+    <body style="font-size: ${DEST_FONT_SIZE}; background-color: #483B38; color: white;">
+      <div id="content" style="margin-bottom: 3rem; text-wrap: nowrap; display: flex; justify-content: center; align-items: center;"></div>
       <pre id="error" style="color: orange; font-size: 0.4em"></div>
       <script>
         let errorCount = 0;
@@ -70,7 +70,7 @@ const index = `
               document.getElementById('error').innerHTML = '<pre>(' + errorCount + ') ' + err.message + '<br/>' + errorSince.toTimeString() + '</pre>';
             })
         }
-        setInterval(loadContent, ${REFRESH_INTERVAL_MS});
+        // setInterval(loadContent, ${REFRESH_INTERVAL_MS});
         loadContent(); 
         
       </script>
