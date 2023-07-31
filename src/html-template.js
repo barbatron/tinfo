@@ -41,15 +41,39 @@ const index = `
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta http-equiv="X-UA-Compatible" content="ie=edge">
       <title>SL Hökis</title>
-      
+      <style>
+        body {
+          font-family: 'Trebuchet MS', sans-serif;
+          font-size: ${DEST_FONT_SIZE}; 
+          background-color: #483B38; 
+          color: white;
+          height: 100vvh;
+        }
+
+        #content {
+          margin-bottom: 3rem; 
+          text-wrap: nowrap; 
+          display: flex; 
+          flex-direction: column;
+          justify-content: center; 
+          align-items: center;
+        }
+
+        #error {
+          color: orange; 
+          font-size: 0.4em;
+        }
+      </style>
     </head>
-    <body style="font-size: ${DEST_FONT_SIZE}; background-color: #483B38; color: white;">
-      <div id="content" style="margin-bottom: 3rem; text-wrap: nowrap; display: flex; justify-content: center; align-items: center;"></div>
-      <pre id="error" style="color: orange; font-size: 0.4em"></div>
+    <body>
+      <div id="content" ></div>
+      <pre id="error" ></div>
+
       <script>
         let errorCount = 0;
         let errorSince = null;
         let knownServerVer;
+
         function loadContent() { 
           const headers = !!knownServerVer ? { ['x-server-version']: knownServerVer } : {}
           fetch('/content', { headers })
@@ -70,7 +94,10 @@ const index = `
               document.getElementById('error').innerHTML = '<pre>(' + errorCount + ') ' + err.message + '<br/>' + errorSince.toTimeString() + '</pre>';
             })
         }
-        // setInterval(loadContent, ${REFRESH_INTERVAL_MS});
+
+        // Disabled to avoid running a bunch of JS in the background, saving battery?
+        // setInterval(loadContent, ${REFRESH_INTERVAL_MS}); 
+
         loadContent(); 
         
       </script>
