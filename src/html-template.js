@@ -33,7 +33,7 @@ const scrollScript = `
   }
 })();`;
 
-const index = `
+const getIndex = (content) => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -67,28 +67,28 @@ const index = `
       </style>
     </head>
     <body>
-      <div id="content" ></div>
+      <div id="content" >${content ?? ""}</div>
       <pre id="error" ></div>
-
+    
       <script>
         let errorCount = 0;
         let errorSince = null;
         let knownServerVer;
-        let refreshAt = null;
 
         function loadContent() { 
+          console.log('Loading contentä');
           const headers = !!knownServerVer ? { ['x-server-version']: knownServerVer } : {}
           
           const updatePromise = fetch('/content', { headers })
             .then(function (response) {
+              const { redirected, headers } = response;
+              console.log('Got response', { redirected, headers });
+
               // Handle redirect
-              if (response.redirected) { window.location.reload(); }
+              if (redirected) { window.location.reload(); }
               
               // Update known server version
-              knownServerVer = response.headers.get('x-server-version');
-
-              // Update next reload time
-              refreshAt = response.headers.get('x-refresh-at') || -1;
+              knownServerVer = headers.get('x-server-version');
 
               // Extract html as text
               return response.text();
@@ -106,7 +106,8 @@ const index = `
             })
         }
 
-        loadContent(); 
+        ${!content && void loadContent()};
+        window.addEventListener('focus', loadContent);
         
         ${scrollScript}
       </script>
@@ -114,4 +115,4 @@ const index = `
   </html>
   `;
 
-module.exports = index;
+module.exports = getIndex;

@@ -1,6 +1,6 @@
 const express = require("express");
 
-const index = require("./html-template");
+const getIndex = require("./html-template");
 const { log } = require("./log");
 
 require("./dayjs");
@@ -170,24 +170,26 @@ const checkVersionMiddleware = (req, res, next) => {
   next();
 };
 
-app.get("/content", checkVersionMiddleware, (req, res) => {
-  log("GET /content", req.headers["user-agent"]);
+function sendContent(res, content) {
   res.setHeader("Content-Type", "text/html");
   res.setHeader("x-server-version", getServerVersion());
   if (fetchError) {
     res.send(fetchError.message).status(500).end();
     return;
   }
-  res.setHeader("Content-Type", "text/html").send(render());
+  res.setHeader("Content-Type", "text/html").send(content);
+}
+
+app.get("/content", checkVersionMiddleware, (req, res) => {
+  log("GET /content", req.headers["user-agent"]);
+  sendContent(res, render());
 });
 
 // respond with "hello world" when a GET request is made to the homepage
 app.get("/", (req, res) => {
   log("GET /", req.headers["user-agent"]);
-  res.setHeader("Content-Type", "text/html; charset=utf-8").send(index);
+  sendContent(res, getIndex(render()));
 });
-
-log("Testing settings/api access...");
 
 const port = process.env.PORT || 8000;
 app.listen(port);
