@@ -68,7 +68,13 @@ const updateDepartures = () =>
       // log("all metros", metros);
       metrosCache = [...metros];
       fetchError = undefined;
-      log("Updated departures (#)", metros.length);
+      log(
+        "Updated departures (#)",
+        metros.map((m) => ({
+          expectedTime: m.ExpectedDateTime,
+          destination: m.Destination,
+        }))
+      );
     })
     .catch((err) => {
       fetchError = err;
