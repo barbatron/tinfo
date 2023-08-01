@@ -1,10 +1,8 @@
 // Time settings
 const dayjs = require("dayjs");
 
-var relativeTime = require("dayjs/plugin/relativeTime");
-dayjs.extend(relativeTime);
-var updateLocale = require("dayjs/plugin/updateLocale");
-dayjs.extend(updateLocale);
+dayjs.extend(require("dayjs/plugin/relativeTime"));
+dayjs.extend(require("dayjs/plugin/updateLocale"));
 
 dayjs.updateLocale("en", {
   relativeTime: {
