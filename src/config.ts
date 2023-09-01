@@ -1,12 +1,11 @@
 import { log } from "./log.ts";
+
 import { config } from "dotenv";
 config();
 
 // Config
 const PORT = process.env.PORT ? Number(process.env.PORT) : 8000;
-const REALTIME_API_KEY = process.env.SL_REALTIME_API_KEY!;
-const SITE_ID = process.env.SL_SITE_ID!;
-const JOURNEY_DIRECTION = process.env.SL_JOURNEY_DIRECTION;
+
 const TIME_WINDOW_MINUTES: number = !!process.env.TIME_WINDOW_MINUTES
   ? Number(process.env.TIME_WINDOW_MINUTES)
   : 20;
@@ -31,8 +30,6 @@ const DEST_BLOCK_MARGIN_BOT = "2.5rem";
 log.info(
   {
     PORT,
-    REALTIME_API_KEY,
-    JOURNEY_DIRECTION,
     TIME_WINDOW_MINUTES,
     FETCH_INTERVAL_MS,
     REFRESH_INTERVAL_MS,
@@ -42,11 +39,13 @@ log.info(
   "CONFIG"
 );
 
+export function getConfig<T>(key: string, required = true) {
+  if (required && !process.env[key]) throw Error("Missing env/config: " + key);
+  return process.env[key] as T;
+}
+
 export {
   PORT,
-  REALTIME_API_KEY,
-  SITE_ID,
-  JOURNEY_DIRECTION,
   TIME_WINDOW_MINUTES,
   FETCH_INTERVAL_MS,
   REFRESH_INTERVAL_MS,
