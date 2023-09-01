@@ -2,11 +2,11 @@
   "name": "tinfo",
   "version": "1.0.0",
   "description": "",
-  "main": "src/main.js",
+  "main": "src/main.ts",
   "type": "module",
   "scripts": {
-    "start": "node src/main.js",
-    "start:dev": "nodemon src/main.js",
+    "start": "node src/main.ts",
+    "start:dev": "nodemon src/main.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "generate:resrobot": "openapi --input ./spec.json --output ./generated"
   },
