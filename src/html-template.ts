@@ -1,4 +1,4 @@
-const { REFRESH_INTERVAL_MS, DEST_FONT_SIZE } = require("./config");
+import { REFRESH_INTERVAL_MS, DEST_FONT_SIZE } from "./config.ts";
 
 const scrollScript = `
 (function() {
@@ -33,7 +33,7 @@ const scrollScript = `
   }
 })();`;
 
-const getIndex = (content) => `
+const getIndex = (content?: string) => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -106,7 +106,7 @@ const getIndex = (content) => `
             })
         }
 
-        ${!content && void loadContent()};
+        ${!content && "void loadContent().catch(console.error);"};
         window.addEventListener('focus', loadContent);
         
         ${scrollScript}
@@ -115,4 +115,4 @@ const getIndex = (content) => `
   </html>
   `;
 
-module.exports = getIndex;
+export default getIndex;

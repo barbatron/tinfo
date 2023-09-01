@@ -1,47 +1,58 @@
-const express = require("express");
+import express from "express";
+import { URL } from "url";
 
-const getIndex = require("./html-template");
-const { log } = require("./log");
+import getIndex from "./html-template.js";
+import { log } from "./log.ts";
 
-require("./dayjs");
-const dayjs = require("dayjs");
+// import "./dayjs.ts";
+import dayjs from "dayjs";
 
-const {
+import {
+  // SL stuff
   REALTIME_API_KEY,
   SITE_ID,
+  JOURNEY_DIRECTION,
+  // General API
   TIME_WINDOW_MINUTES,
   FETCH_INTERVAL_MS,
+  // Emoji calcs
   WALK_TIME_SECONDS,
   RUSH_SECONDS_GAINED,
-  JOURNEY_DIRECTION,
+  // Esthetic
   STATION_NAME_REPLACEMENTS,
   DEST_NAME_OPACITY,
   DEST_BLOCK_MARGIN_BOT,
-} = require("./config");
+  PORT,
+} from "./config.ts";
+import fetch from "node-fetch";
 
 const app = express();
 const startTime = new Date();
+
+const required = [REALTIME_API_KEY, SITE_ID, TIME_WINDOW_MINUTES];
+if (required.some((r) => !r)) throw Error("Required config missing");
 
 async function fetchNextDeparture() {
   const url = new URL("https://api.sl.se/api2/realtimedeparturesV4.json");
   url.searchParams.set("Key", REALTIME_API_KEY);
   url.searchParams.set("SiteId", SITE_ID);
-  url.searchParams.set("TimeWindow", TIME_WINDOW_MINUTES);
+  url.searchParams.set("TimeWindow", String(TIME_WINDOW_MINUTES));
   // url.searchParams.set("Bus", "false");
 
-  const response = await fetch(url);
+  // @ts-ignore
+  const response = await fetch<any>(url);
   if (!response.ok) throw Error("Request failed");
 
-  const data = await response.json();
-  log("fetch respponse", data);
+  const data = (await response.json()) as any;
+  log.info(data, "fetch respponse", data);
   if (data.Message) throw Error(data.Message);
 
   return data.ResponseData.Metros;
 }
 
-const decorateDepartures = (departures = []) =>
+const decorateDepartures = (departures: object[] = []) =>
   Array.from(departures ?? [])
-    .map((d) => ({
+    .map((d: any) => ({
       ...d,
       expectedInSeconds: dayjs(d.ExpectedDateTime).diff(new Date(), "seconds"),
       scheduleDriftSeconds: dayjs(d.ExpectedDateTime).diff(
@@ -60,18 +71,18 @@ const decorateDepartures = (departures = []) =>
       canMakeIt: d.secondsToSpare >= -RUSH_SECONDS_GAINED,
     }));
 
-let metrosCache = {};
-let fetchError = null;
+let lastDeparturesRaw: any[] = [];
+let fetchError: Error | null = null;
 
 const updateDepartures = () =>
   fetchNextDeparture()
     .then((metros) => {
       // log("all metros", metros);
-      metrosCache = [...metros];
-      fetchError = undefined;
-      log(
+      lastDeparturesRaw = [...metros];
+      fetchError = null;
+      log.info(
         "Updated departures (#)",
-        metros.map((m) => ({
+        metros.map((m: any) => ({
           expectedTime: m.ExpectedDateTime,
           destination: m.Destination,
         }))
@@ -79,12 +90,12 @@ const updateDepartures = () =>
     })
     .catch((err) => {
       fetchError = err;
-      log("error", "updateDepartures failed", err);
+      log.error("updateDepartures failed", err);
     });
 
 const render = () => {
   if (fetchError) throw Error(fetchError.message);
-  const decoratedDepartures = decorateDepartures(metrosCache);
+  const decoratedDepartures = decorateDepartures(lastDeparturesRaw);
   const departuresByDirection = decoratedDepartures.reduce((map, dep) => {
     const key = String(dep.JourneyDirection);
     map.set(
@@ -96,9 +107,9 @@ const render = () => {
           [dep]
     );
     return map;
-  }, new Map());
+  }, new Map<string, object>());
 
-  const renderDirection = (departures) => {
+  const renderDirection = (departures: any[]) => {
     // log(`renderDict`, { departures });
     if (!departures.length)
       return [`(none for  ${TIME_WINDOW_MINUTES} minutes)`];
@@ -113,7 +124,7 @@ const render = () => {
             ? "😵"
             : "😱"
           : "✨";
-      const timeMinutes = dayjs(expectedTime).fromNow(true);
+      const timeMinutes = dayjs(expectedTime).diff(new Date(), "minutes");
       const destStr =
         STATION_NAME_REPLACEMENTS.get(departure.Destination) ??
         departure.Destination;
@@ -128,8 +139,10 @@ const render = () => {
   const otherDirections = Array.from(
     renderDirection(
       Array.from(departuresByDirection.entries())
-        .filter(([k]) => k !== String(JOURNEY_DIRECTION))
-        .flatMap(([, v]) => v) ?? []
+        // @ts-ignore
+        .filter(([k]: [any]) => k !== String(JOURNEY_DIRECTION))
+        // @ts-ignore
+        .flatMap(([, v]: [any, any]) => v) ?? []
     ) ?? []
   );
   const topLevelLinesHtml =
@@ -144,11 +157,19 @@ const render = () => {
   return topLevelLinesHtml + "\n" + otherDirectionsHtml;
 };
 
-setInterval(() => updateDepartures().catch(console.error), FETCH_INTERVAL_MS);
-void updateDepartures().catch(console.error);
+const doUpdate = () => {
+  void updateDepartures().catch((err) =>
+    log.error({ err }, "updateDepartures failed")
+  );
+};
+
+if (FETCH_INTERVAL_MS && typeof FETCH_INTERVAL_MS === "number")
+  setInterval(doUpdate, FETCH_INTERVAL_MS);
+doUpdate();
 
 const getServerVersion = () => startTime.valueOf().toString();
 
+// @ts-ignore
 const checkVersionMiddleware = (req, res, next) => {
   const clientsServerVersion = req.headers["x-server-version"];
   if (!clientsServerVersion) {
@@ -171,7 +192,7 @@ const checkVersionMiddleware = (req, res, next) => {
   next();
 };
 
-function sendContent(res, content) {
+function sendContent(res: express.Response, content: string) {
   res.setHeader("Content-Type", "text/html");
   res.setHeader("x-server-version", getServerVersion());
   if (fetchError) {
@@ -181,22 +202,25 @@ function sendContent(res, content) {
   res.setHeader("Content-Type", "text/html").send(content);
 }
 
-app.get("/content", checkVersionMiddleware, (req, res) => {
-  log("GET /content", req.headers["user-agent"]);
-  sendContent(res, render());
-});
+app.get(
+  "/content",
+  checkVersionMiddleware,
+  (req: express.Request, res: express.Response) => {
+    log.info("GET /content", req.headers["user-agent"]);
+    sendContent(res, render());
+  }
+);
 
 // respond with "hello world" when a GET request is made to the homepage
-app.get("/", (req, res) => {
-  log("GET /", req.headers["user-agent"]);
+app.get("/", (req: express.Request, res: express.Response) => {
+  log.info("GET /", req.headers["user-agent"]);
   sendContent(res, getIndex(render()));
 });
 
-const port = process.env.PORT || 8000;
-app.listen(port);
-log("Listening on ", port);
+app.listen(PORT);
+log.info("Listening on " + String(PORT));
 
 process.on("SIGINT", function () {
-  console.log("Caught interrupt signal");
+  log.info("Caught interrupt signal");
   process.exit();
 });
