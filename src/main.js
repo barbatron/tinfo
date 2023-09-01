@@ -24,17 +24,18 @@ const startTime = new Date();
 
 async function fetchNextDeparture() {
   const url = new URL("https://api.sl.se/api2/realtimedeparturesV4.json");
-  url.searchParams.set("key", REALTIME_API_KEY);
-  url.searchParams.set("siteid", SITE_ID);
-  url.searchParams.set("timewindow", TIME_WINDOW_MINUTES);
-  url.searchParams.set("Bus", "false");
+  url.searchParams.set("Key", REALTIME_API_KEY);
+  url.searchParams.set("SiteId", SITE_ID);
+  url.searchParams.set("TimeWindow", TIME_WINDOW_MINUTES);
+  // url.searchParams.set("Bus", "false");
 
   const response = await fetch(url);
   if (!response.ok) throw Error("Request failed");
 
   const data = await response.json();
+  log("fetch respponse", data);
   if (data.Message) throw Error(data.Message);
-  // log("fetch respponse", data);
+
   return data.ResponseData.Metros;
 }
 
