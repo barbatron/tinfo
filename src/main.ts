@@ -1,75 +1,59 @@
 import express from "express";
-import { URL } from "url";
 
 import getIndex from "./html-template.js";
 import { log } from "./log.ts";
 
-// import "./dayjs.ts";
 import dayjs from "dayjs";
 
 import {
-  // SL stuff
-  REALTIME_API_KEY,
-  SITE_ID,
-  JOURNEY_DIRECTION,
-  // General API
-  TIME_WINDOW_MINUTES,
+  DEST_BLOCK_MARGIN_BOT,
+  DEST_NAME_OPACITY,
   FETCH_INTERVAL_MS,
-  // Emoji calcs
-  WALK_TIME_SECONDS,
+  PORT,
   RUSH_SECONDS_GAINED,
   // Esthetic
   STATION_NAME_REPLACEMENTS,
-  DEST_NAME_OPACITY,
-  DEST_BLOCK_MARGIN_BOT,
-  PORT,
+  // General API
+  TIME_WINDOW_MINUTES,
+  // Emoji calcs
+  WALK_TIME_SECONDS,
 } from "./config.ts";
-import fetch from "node-fetch";
+import { createSlRealtimeClient } from "./providers/sl.ts";
+import { Departure, DepartureExt } from "./types.ts";
 
 const app = express();
 const startTime = new Date();
 
-const required = [REALTIME_API_KEY, SITE_ID, TIME_WINDOW_MINUTES];
-if (required.some((r) => !r)) throw Error("Required config missing");
+const client = createSlRealtimeClient();
 
 async function fetchNextDeparture() {
-  const url = new URL("https://api.sl.se/api2/realtimedeparturesV4.json");
-  url.searchParams.set("Key", REALTIME_API_KEY);
-  url.searchParams.set("SiteId", SITE_ID);
-  url.searchParams.set("TimeWindow", String(TIME_WINDOW_MINUTES));
-  // url.searchParams.set("Bus", "false");
-
-  // @ts-ignore
-  const response = await fetch<any>(url);
-  if (!response.ok) throw Error("Request failed");
-
-  const data = (await response.json()) as any;
-  log.info(data, "fetch respponse", data);
-  if (data.Message) throw Error(data.Message);
-
-  return data.ResponseData.Metros;
+  return await client.fetch();
 }
 
-const decorateDepartures = (departures: object[] = []) =>
-  Array.from(departures ?? [])
-    .map((d: any) => ({
-      ...d,
-      expectedInSeconds: dayjs(d.ExpectedDateTime).diff(new Date(), "seconds"),
-      scheduleDriftSeconds: dayjs(d.ExpectedDateTime).diff(
-        d.TimeTabledDateTime,
-        "seconds"
-      ),
-    }))
-    .map((d) => ({
-      ...d,
-      secondsToSpare: d.expectedInSeconds - WALK_TIME_SECONDS,
-      successProb: d.expectedInSeconds / WALK_TIME_SECONDS,
-    }))
-    .map((d) => ({
-      ...d,
-      successProbPow: Math.pow(d.successProb, 2),
-      canMakeIt: d.secondsToSpare >= -RUSH_SECONDS_GAINED,
-    }));
+const decorateDepartures = (departures: Departure[] = []): DepartureExt[] =>
+  Array.from(departures ?? []).map(decorateDeparture);
+
+const decorateDeparture = (d: Departure): DepartureExt => {
+  const d1 = {
+    ...d,
+    expectedInSeconds: dayjs(d.expectedTime).diff(new Date(), "seconds"),
+    scheduleDriftSeconds: dayjs(d.expectedTime).diff(
+      d.scheduledTime,
+      "seconds"
+    ),
+  };
+  const d2 = {
+    ...d1,
+    secondsToSpare: d1.expectedInSeconds - WALK_TIME_SECONDS,
+    successProb: d1.expectedInSeconds / WALK_TIME_SECONDS,
+  };
+  const d3 = {
+    ...d2,
+    successProbPow: Math.pow(d2.successProb, 2),
+    canMakeIt: d2.secondsToSpare >= -RUSH_SECONDS_GAINED,
+  };
+  return d3;
+};
 
 let lastDeparturesRaw: any[] = [];
 let fetchError: Error | null = null;
@@ -77,7 +61,6 @@ let fetchError: Error | null = null;
 const updateDepartures = () =>
   fetchNextDeparture()
     .then((metros) => {
-      // log("all metros", metros);
       lastDeparturesRaw = [...metros];
       fetchError = null;
       log.info(
@@ -97,27 +80,20 @@ const render = () => {
   if (fetchError) throw Error(fetchError.message);
   const decoratedDepartures = decorateDepartures(lastDeparturesRaw);
   const departuresByDirection = decoratedDepartures.reduce((map, dep) => {
-    const key = String(dep.JourneyDirection);
-    map.set(
-      key,
-      // concat into existing array
-      map.has(key)
-        ? [...map.get(key), dep]
-        : // otherwise new array with dep as 1st
-          [dep]
-    );
+    const key = dep.direction ?? "-";
+    if (map.has(key)) map.get(key)!.push(dep);
+    else map.set(key, [dep]);
     return map;
-  }, new Map<string, object>());
+  }, new Map<string, DepartureExt[]>());
 
-  const renderDirection = (departures: any[]) => {
-    // log(`renderDict`, { departures });
+  const renderDirection = (departures: DepartureExt[]) => {
     if (!departures.length)
       return [`(none for  ${TIME_WINDOW_MINUTES} minutes)`];
     const realisticDepartures = departures; //.filter((d) => d.canMakeIt);
 
     // format line strings
     const lines = realisticDepartures.map((departure) => {
-      const expectedTime = departure.ExpectedDateTime;
+      const expectedTime = departure.expectedTime;
       const hurryStr =
         departure.successProbPow < 1
           ? departure.successProb < 0
@@ -126,16 +102,18 @@ const render = () => {
           : "✨";
       const timeMinutes = dayjs(expectedTime).diff(new Date(), "minutes");
       const destStr =
-        STATION_NAME_REPLACEMENTS.get(departure.Destination) ??
-        departure.Destination;
+        STATION_NAME_REPLACEMENTS.get(departure.destination) ??
+        departure.destination;
       return `${hurryStr} ${timeMinutes} <span style="opacity: ${DEST_NAME_OPACITY}">${destStr}</span>`;
     });
     return lines;
   };
 
+  const JOURNEY_DIRECTION = "1";
   const topLevelLines = Array.from(
     renderDirection(departuresByDirection.get(JOURNEY_DIRECTION) ?? []) ?? []
   );
+
   const otherDirections = Array.from(
     renderDirection(
       Array.from(departuresByDirection.entries())
@@ -149,7 +127,7 @@ const render = () => {
     `<div style="display: block; margin-bottom: ${DEST_BLOCK_MARGIN_BOT}; white-space: nowrap">` +
     topLevelLines.join(`<br/>`) +
     "</div>";
-  const otherDirectionsHtml = departuresByDirection.entries().length
+  const otherDirectionsHtml = Array.from(departuresByDirection.entries())
     ? '<div style="display: block; margin-bottom: 3rem; opacity: 0.3">' +
       otherDirections.join(`<br/>`) +
       "</div>"
