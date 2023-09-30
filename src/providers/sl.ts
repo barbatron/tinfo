@@ -9,6 +9,7 @@ const SL_REALTIME_DEPARTURES_API_URL =
 class SlRealtimeClient {
   public constructor(
     private readonly conf: {
+      apiUrl: string;
       apiKey: string;
       siteId: string;
       timeWindowMinutes: number;
@@ -17,7 +18,7 @@ class SlRealtimeClient {
   ) {}
 
   public async fetch() {
-    const url = new URL(SL_REALTIME_DEPARTURES_API_URL);
+    const url = new URL(this.conf.apiUrl);
     url.searchParams.set("Key", this.conf.apiKey);
     url.searchParams.set("SiteId", this.conf.siteId);
     url.searchParams.set("TimeWindow", String(this.conf.timeWindowMinutes));
@@ -53,6 +54,7 @@ export function createSlRealtimeClient() {
     getConfig<number>("TIME_WINDOW_MINUTES", false) ?? 30;
 
   return new SlRealtimeClient({
+    apiUrl: SL_REALTIME_DEPARTURES_API_URL,
     apiKey: REALTIME_API_KEY,
     siteId: SITE_ID,
     direction: JOURNEY_DIRECTION,
