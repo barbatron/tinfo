@@ -3,6 +3,9 @@ import { getConfig } from "../config.ts";
 import { log } from "../log.ts";
 import { Departure } from "../types.ts";
 
+const SL_REALTIME_DEPARTURES_API_URL =
+  "https://api.sl.se/api2/realtimedeparturesV4.json";
+
 class SlRealtimeClient {
   public constructor(
     private readonly conf: {
@@ -14,7 +17,7 @@ class SlRealtimeClient {
   ) {}
 
   public async fetch() {
-    const url = new URL("https://api.sl.se/api2/realtimedeparturesV4.json");
+    const url = new URL(SL_REALTIME_DEPARTURES_API_URL);
     url.searchParams.set("Key", this.conf.apiKey);
     url.searchParams.set("SiteId", this.conf.siteId);
     url.searchParams.set("TimeWindow", String(this.conf.timeWindowMinutes));
