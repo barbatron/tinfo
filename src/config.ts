@@ -1,9 +1,19 @@
 import { log } from "./log.ts";
 
 import { config } from "dotenv";
+
 config();
 
-// Config
+type ConfigAccessor<T, TReq extends boolean> = (
+  key: string,
+  required: TReq
+) => TReq extends true ? T : T | null;
+
+export interface Config {
+  getString: ConfigAccessor<string, boolean>;
+  getNumber: ConfigAccessor<number, boolean>;
+}
+
 const PORT = process.env.PORT ? Number(process.env.PORT) : 8000;
 
 const TIME_WINDOW_MINUTES: number = !!process.env.TIME_WINDOW_MINUTES
@@ -39,10 +49,22 @@ log.info(
   "CONFIG"
 );
 
-export function getConfig<T>(key: string, required = true) {
-  if (required && !process.env[key]) throw Error("Missing env/config: " + key);
-  return process.env[key] as T;
-}
+export const fromEnv: Config = {
+  getString: function <T extends boolean>(key: string, required?: T) {
+    const isPresent = key in process.env && !!process.env[key];
+    if (required && !isPresent) throw Error("Missing/empty config: " + key);
+    const value = String(process.env[key]!);
+    return value;
+  },
+  getNumber: function (key: string, required = true) {
+    const isPresent = key in process.env && !!process.env[key];
+    if (required && !isPresent) throw Error("Missing/empty config: " + key);
+    const str = this.getString(key, required);
+    return Number(str);
+  },
+};
+
+export const getConfig = fromEnv.getString.bind(fromEnv);
 
 export {
   PORT,

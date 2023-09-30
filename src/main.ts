@@ -21,10 +21,13 @@ import {
 import { createSlRealtimeClient } from "./providers/sl/index.ts";
 import { Departure, DepartureExt } from "./types.ts";
 
+import * as conf from "./config.ts";
+const config = conf.fromEnv;
+
 const app = express();
 const startTime = new Date();
 
-const client = createSlRealtimeClient();
+const client = createSlRealtimeClient(config);
 
 async function fetchNextDeparture() {
   return await client.fetch();
