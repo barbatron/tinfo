@@ -4,6 +4,8 @@ import getIndex from "./html-template.js";
 import { log } from "./log.ts";
 
 import dayjs from "dayjs";
+import "dayjs/plugin/relativeTime.js";
+import "./dayjs.ts";
 
 import {
   DEST_BLOCK_MARGIN_BOT,
@@ -103,11 +105,12 @@ const render = () => {
             ? "😵"
             : "😱"
           : "✨";
-      const timeMinutes = dayjs(expectedTime).diff(new Date(), "minutes");
+      const timeLeft = dayjs(expectedTime).fromNow(true); // .diff(new Date(), "minutes");
+
       const destStr =
         STATION_NAME_REPLACEMENTS.get(departure.destination) ??
         departure.destination;
-      return `${hurryStr} ${timeMinutes} <span style="opacity: ${DEST_NAME_OPACITY}">${destStr}</span>`;
+      return `${hurryStr} ${timeLeft} <span style="opacity: ${DEST_NAME_OPACITY}">${destStr}</span>`;
     });
     return lines;
   };

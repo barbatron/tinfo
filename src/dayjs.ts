@@ -1,12 +1,14 @@
 // Time settings
-const dayjs = await import("dayjs");
+// const dayjs = require("dayjs");
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime.js";
+import localeData from "dayjs/plugin/localeData.js";
+import updateLocale from "dayjs/plugin/updateLocale.js";
 
-// @ts-ignore
-dayjs.extend(await import("dayjs/plugin/relativeTime"));
-// @ts-ignore
-dayjs.extend(await import("dayjs/plugin/updateLocale"));
+dayjs.extend(relativeTime);
+dayjs.extend(localeData);
+dayjs.extend(updateLocale);
 
-// @ts-ignore
 dayjs.updateLocale("en", {
   relativeTime: {
     future: "in %s",

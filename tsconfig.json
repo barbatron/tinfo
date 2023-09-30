@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "lib": ["ESNext", "ES2022"],
-    "module": "esnext",
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "target": "ES2022",
     "allowImportingTsExtensions": true,
@@ -10,7 +10,6 @@
     "strict": true,
     "downlevelIteration": true,
     "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
     "types": []
