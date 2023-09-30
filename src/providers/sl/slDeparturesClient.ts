@@ -34,7 +34,7 @@ export class SlRealtimeClient {
     const parsed: Departure[] = departures.map((d) => ({
       expectedTime: d.ExpectedDateTime ?? d.TimeTabledDateTime,
       scheduledTime: d.TimeTabledDateTime,
-      direction: d.JourneyDirection, // TODO: type
+      direction: String(d.JourneyDirection), // TODO: type
       destination: d.Destination,
     }));
 
