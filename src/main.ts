@@ -18,7 +18,7 @@ import {
   // Emoji calcs
   WALK_TIME_SECONDS,
 } from "./config.ts";
-import { createSlRealtimeClient } from "./providers/sl.ts";
+import { createSlRealtimeClient } from "./providers/sl/index.ts";
 import { Departure, DepartureExt } from "./types.ts";
 
 const app = express();

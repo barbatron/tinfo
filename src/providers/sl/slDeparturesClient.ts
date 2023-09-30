@@ -1,12 +1,8 @@
 import fetch from "node-fetch";
-import { getConfig } from "../config.ts";
-import { log } from "../log.ts";
-import { Departure } from "../types.ts";
+import { log } from "../../log.ts";
+import { Departure } from "../../types.ts";
 
-const SL_REALTIME_DEPARTURES_API_URL =
-  "https://api.sl.se/api2/realtimedeparturesV4.json";
-
-class SlRealtimeClient {
+export class SlRealtimeClient {
   public constructor(
     private readonly conf: {
       apiUrl: string;
@@ -44,20 +40,4 @@ class SlRealtimeClient {
 
     return parsed;
   }
-}
-
-export function createSlRealtimeClient() {
-  const REALTIME_API_KEY = getConfig<string>("SL_REALTIME_API_KEY");
-  const SITE_ID = getConfig<string>("SL_SITE_ID");
-  const JOURNEY_DIRECTION = getConfig<string>("SL_JOURNEY_DIRECTION", false);
-  const TIME_WINDOW_MINUTES =
-    getConfig<number>("TIME_WINDOW_MINUTES", false) ?? 30;
-
-  return new SlRealtimeClient({
-    apiUrl: SL_REALTIME_DEPARTURES_API_URL,
-    apiKey: REALTIME_API_KEY,
-    siteId: SITE_ID,
-    direction: JOURNEY_DIRECTION,
-    timeWindowMinutes: TIME_WINDOW_MINUTES,
-  });
 }
