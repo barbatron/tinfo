@@ -1,14 +1,11 @@
 {
   "extends": "@tsconfig/recommended/tsconfig.json",
   "ts-node": {
-    //"transpileOnly": true,
     "esm": true,
     "files": true,
     "experimentalResolver": true,
     "allowImportingTsExtensions": true,
-    // "esModuleInterop": true,
     "baseUrl": "./src",
-    // "moduleDetection": "auto",
     "allowSyntheticDefaultImports": true,
     // "swc": true,
     "preferTsExts": true,
@@ -23,7 +20,6 @@
     "baseUrl": "./src",
     "noImplicitOverride": false,
     "moduleResolution": "NodeNext",
-    // "moduleDetection": "auto",
     "allowImportingTsExtensions": true,
   },
   "include": [
