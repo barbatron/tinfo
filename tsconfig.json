@@ -7,7 +7,7 @@
     "allowImportingTsExtensions": true,
     "baseUrl": "./src",
     "allowSyntheticDefaultImports": true,
-    // "swc": true,
+    "swc": true,
     "preferTsExts": true,
   },
   "files": [
