@@ -1,11 +1,11 @@
 import express from "express";
 
-import getIndex from "./html-template.js";
+import getIndex from "./html-template.ts";
 import { log } from "./log.ts";
 
 import dayjs from "dayjs";
-import "dayjs/plugin/relativeTime.js";
-import "./dayjs.ts";
+
+import "./init-dayjs.ts";
 
 import {
   DEST_BLOCK_MARGIN_BOT,

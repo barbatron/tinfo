@@ -1,5 +1,5 @@
-ARG BUILD_IMAGE=node:20-slim
-ARG RUN_IMAGE=gcr.io/distroless/nodejs20-debian11
+ARG BUILD_IMAGE=node:18-slim
+ARG RUN_IMAGE=gcr.io/distroless/nodejs18-debian11
 ARG PORT=8080
 
 # Build stage

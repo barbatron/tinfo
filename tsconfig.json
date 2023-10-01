@@ -1,21 +1,36 @@
 {
-  "compilerOptions": {
-    "lib": ["ESNext", "ES2022"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "target": "ES2022",
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "composite": true,
-    "strict": true,
-    "downlevelIteration": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "allowJs": true,
-    "types": []
-  },
+  "extends": "@tsconfig/recommended/tsconfig.json",
   "ts-node": {
-    // Tell ts-node CLI to install the --loader automatically
-    "esm": true
-  }
+    //"transpileOnly": true,
+    "esm": true,
+    "files": true,
+    "experimentalResolver": true,
+    "allowImportingTsExtensions": true,
+    // "esModuleInterop": true,
+    "baseUrl": "./src",
+    // "moduleDetection": "auto",
+    "allowSyntheticDefaultImports": true,
+    // "swc": true,
+    "preferTsExts": true,
+  },
+  "files": [
+    "src/**/*.ts"
+  ],
+  "compilerOptions": {
+    "allowJs": true,
+    "module": "ES6",
+    "target": "ES6",
+    "baseUrl": "./src",
+    "noImplicitOverride": false,
+    "moduleResolution": "NodeNext",
+    // "moduleDetection": "auto",
+    "allowImportingTsExtensions": true,
+  },
+  "include": [
+    "**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build"
+  ],
 }

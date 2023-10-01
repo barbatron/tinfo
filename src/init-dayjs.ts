@@ -1,5 +1,3 @@
-// Time settings
-// const dayjs = require("dayjs");
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
 import localeData from "dayjs/plugin/localeData.js";
