@@ -18,13 +18,13 @@ export class SlRealtimeClient {
     url.searchParams.set("Key", this.conf.apiKey);
     url.searchParams.set("SiteId", this.conf.siteId);
     url.searchParams.set("TimeWindow", String(this.conf.timeWindowMinutes));
-    // url.searchParams.set("Bus", "false");
+    url.searchParams.set("Bus", "false");
 
     const response = await fetch(url);
     if (!response.ok) throw Error("Request failed");
 
     const data = (await response.json()) as any;
-    // log.info(data, "fetch respponse", data);
+    log.info(data, "SL Departures API respponse", data);
 
     if (data.Message) throw Error(data.Message);
 

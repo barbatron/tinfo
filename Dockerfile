@@ -1,27 +1,19 @@
 ARG BUILD_IMAGE=node:18-slim
-ARG RUN_IMAGE=gcr.io/distroless/nodejs18-debian11
 ARG PORT=8080
 
-# Build stage
-FROM $BUILD_IMAGE AS build-env
+# Prep pnpm
+# Install pnpm
+FROM $BUILD_IMAGE AS env
 COPY . /app
 WORKDIR /app
-RUN npm ci 
-# && npm run build
 
-# Prepare production dependencies
-FROM $BUILD_IMAGE AS deps-env
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+RUN npm install -g pnpm
 
-# Create final production stage
-FROM $RUN_IMAGE AS run-env
-WORKDIR /usr/app
-COPY --from=deps-env /node_modules ./node_modules
-COPY --from=build-env /app ./
-COPY package.json ./
+# todo: layer
+# RUN pnpm i
+RUN npm i
 
-# Distroless node cmd is just node, so "node .":
+#" FROM deps AS production
 ENV NODE_ENV="production"
-EXPOSE 8080
-CMD ["."] 
+EXPOSE 8000
+CMD ["pnpm", "dev"] 

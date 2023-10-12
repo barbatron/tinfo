@@ -85,7 +85,7 @@ const render = () => {
   if (fetchError) throw Error(fetchError.message);
   const decoratedDepartures = decorateDepartures(lastDeparturesRaw);
   const departuresByDirection = decoratedDepartures.reduce((map, dep) => {
-    const key = dep.direction ?? "-";
+    const key = String(dep.direction) ?? "-";
     if (map.has(key)) map.get(key)!.push(dep);
     else map.set(key, [dep]);
     return map;
