@@ -24,7 +24,7 @@ export class SlRealtimeClient {
     if (!response.ok) throw Error("Request failed");
 
     const data = (await response.json()) as any;
-    // log.info(data, "fetch respponse", data);
+    log.info(data, "SL Departures API respponse", data);
 
     if (data.Message) throw Error(data.Message);
 
