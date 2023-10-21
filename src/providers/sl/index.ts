@@ -1,5 +1,5 @@
-import { Config, getConfig } from "../../config.ts";
-import { SlRealtimeClient } from "./slDeparturesClient.ts";
+import { type Config } from "../../config.js";
+import { SlRealtimeClient } from "./slDeparturesClient.js";
 
 const SL_REALTIME_DEPARTURES_API_URL =
   "https://api.sl.se/api2/realtimedeparturesV4.json";

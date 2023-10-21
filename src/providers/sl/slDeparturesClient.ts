@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
-import { log } from "../../log.ts";
-import { Departure } from "../../types.ts";
+import { log } from "../../log.js";
+import type { Departure } from "../../types.js";
 
 export class SlRealtimeClient {
   public constructor(

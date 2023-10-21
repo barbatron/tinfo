@@ -1,32 +1,28 @@
-import express from "express";
+import { Elysia, type Context } from "elysia";
 
-import getIndex from "./html-template.ts";
-import { log } from "./log.ts";
-
+import getIndex from "./html-template.js";
+import { log } from "./log.js";
 import dayjs from "dayjs";
 
 import "./init-dayjs.ts";
 
-import {
-  DEST_BLOCK_MARGIN_BOT,
-  DEST_NAME_OPACITY,
-  FETCH_INTERVAL_MS,
-  PORT,
-  RUSH_SECONDS_GAINED,
-  // Esthetic
-  STATION_NAME_REPLACEMENTS,
-  // General API
-  TIME_WINDOW_MINUTES,
-  // Emoji calcs
-  WALK_TIME_SECONDS,
-} from "./config.ts";
-import { createSlRealtimeClient } from "./providers/sl/index.ts";
-import { Departure, DepartureExt } from "./types.ts";
+import { createSlRealtimeClient } from "./providers/sl/index.js";
+import type { Departure, DepartureExt } from "./types.ts";
 
-import * as conf from "./config.ts";
+import * as conf from "./config.js";
+const {
+  PORT,
+  TIME_WINDOW_MINUTES,
+  FETCH_INTERVAL_MS,
+  WALK_TIME_SECONDS,
+  RUSH_SECONDS_GAINED,
+  STATION_NAME_REPLACEMENTS,
+  DEST_NAME_OPACITY,
+  DEST_BLOCK_MARGIN_BOT,
+} = conf;
+
 const config = conf.fromEnv;
 
-const app = express();
 const startTime = new Date();
 
 const client = createSlRealtimeClient(config);
@@ -154,11 +150,10 @@ doUpdate();
 const getServerVersion = () => startTime.valueOf().toString();
 
 // @ts-ignore
-const checkVersionMiddleware = (req, res, next) => {
-  const clientsServerVersion = req.headers["x-server-version"];
+const checkVersionMiddleware = ({ request, set }) => {
+  const clientsServerVersion = request.headers["x-server-version"];
   if (!clientsServerVersion) {
     console.log("No x-server-version in client request - welcome!");
-    next();
     return;
   }
 
@@ -169,36 +164,34 @@ const checkVersionMiddleware = (req, res, next) => {
       serverVersion,
     });
 
-    res.set("location", "/");
-    res.status(302).send();
-    return;
+    set.redirect("/");
+    set.status(302).send();
   }
-  next();
 };
 
-function sendContent(res: express.Response, content: string) {
-  res.setHeader("Content-Type", "text/html");
-  res.setHeader("x-server-version", getServerVersion());
+function sendContent({ set, body }: Context, content: string) {
+  set.headers["Content-Type"] = "text/html";
+  set.headers["x-server-version"] = getServerVersion();
   if (fetchError) {
-    res.send(fetchError.message).status(500).end();
-    return;
+    set.status = 500;
+    return fetchError.message;
   }
-  res.setHeader("Content-Type", "text/html").send(content);
+  set.headers["Content-Type"] = "text/html";
+  body = content;
+  return content;
 }
 
-app.get(
-  "/content",
-  checkVersionMiddleware,
-  (req: express.Request, res: express.Response) => {
-    log.info("GET /content", req.headers["user-agent"]);
-    sendContent(res, render());
-  }
-);
+const app = new Elysia();
+
+app.get("/content", (context) => {
+  log.info("GET /content", context.request.headers.get("user-agent"));
+  return sendContent(context, render());
+});
 
 // respond with "hello world" when a GET request is made to the homepage
-app.get("/", (req: express.Request, res: express.Response) => {
-  log.info("GET /", req.headers["user-agent"]);
-  sendContent(res, getIndex(render()));
+app.get("/", (context) => {
+  log.info("GET /", context.request.headers.get("user-agent"));
+  return sendContent(context, getIndex(render()));
 });
 
 app.listen(PORT);
