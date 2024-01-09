@@ -1,4 +1,4 @@
-ARG BUILD_IMAGE=node:18-slim
+ARG BUILD_IMAGE=node:20-slim
 ARG PORT=8080
 
 # Prep pnpm
