@@ -27,7 +27,7 @@
     "@types/node": "^18",
     "bun-types": "^1.0.7",
     "nodemon": "^2.0.22",
-    "openapi-typescript-codegen": "^0.25.0",
+    "openapi-typescript-codegen": "^0.27.0",
     "tswc": "^1.2.0",
     "typescript": "5.3.0-dev.20231021"
   }
