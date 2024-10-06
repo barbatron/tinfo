@@ -1,7 +1,6 @@
-import express from "express";
-
-import getIndex from "./html-template.ts";
-import { log } from "./log.ts";
+import { Context, Elysia } from "elysia";
+import getIndex from "./html-template";
+import { log } from "./log";
 
 import dayjs from "dayjs";
 
@@ -19,17 +18,17 @@ import {
   TIME_WINDOW_MINUTES,
   // Emoji calcs
   WALK_TIME_SECONDS,
-} from "./config.ts";
-import { createSlRealtimeClient } from "./providers/sl/index.ts";
-import { Departure, DepartureExt } from "./types.ts";
+} from "./config";
+import { createSlClientTest, createSlRealtimeClient } from "./providers/sl";
+import { Departure, DepartureExt } from "./types";
 
-import * as conf from "./config.ts";
+import * as conf from "./config";
+
 const config = conf.fromEnv;
 
-const app = express();
 const startTime = new Date();
 
-const client = createSlRealtimeClient(config);
+const client = createSlClientTest(config);
 
 async function fetchNextDeparture() {
   return await client.fetch();
@@ -70,9 +69,9 @@ const updateDepartures = () =>
       fetchError = null;
       log.info(
         "Updated departures (#)",
-        metros.map((m: any) => ({
-          expectedTime: m.ExpectedDateTime,
-          destination: m.Destination,
+        metros.map((m: Departure) => ({
+          expectedTime: m.expectedTime,
+          destination: m.destination,
         }))
       );
     })
@@ -105,7 +104,9 @@ const render = () => {
             ? "😵"
             : "😱"
           : "✨";
-      const timeLeft = dayjs(expectedTime).fromNow(true); // .diff(new Date(), "minutes");
+
+      const timeLeft = dayjs(expectedTime).diff(new Date(), "minutes");
+      // .fromNow(true); // .diff(new Date(), "minutes");
 
       const destStr =
         STATION_NAME_REPLACEMENTS.get(departure.destination) ??
@@ -149,6 +150,7 @@ const doUpdate = () => {
 
 if (FETCH_INTERVAL_MS && typeof FETCH_INTERVAL_MS === "number")
   setInterval(doUpdate, FETCH_INTERVAL_MS);
+
 doUpdate();
 
 const getServerVersion = () => startTime.valueOf().toString();
@@ -176,35 +178,22 @@ const checkVersionMiddleware = (req, res, next) => {
   next();
 };
 
-function sendContent(res: express.Response, content: string) {
-  res.setHeader("Content-Type", "text/html");
-  res.setHeader("x-server-version", getServerVersion());
-  if (fetchError) {
-    res.send(fetchError.message).status(500).end();
-    return;
-  }
-  res.setHeader("Content-Type", "text/html").send(content);
-}
+const app = new Elysia()
+  .get("/", ({ set, headers }) => {
+    log.info("GET /", headers["user-agent"]);
+    if (fetchError) {
+      throw fetchError;
+    }
+    set.headers["content-type"] = "text/html";
+    return getIndex(render());
+  })
+  .get("/content", ({ headers, set }) => {
+    log.info("GET /content", headers["user-agent"]);
+    set.headers["content-type"] = "text/html";
+    return render();
+  })
+  .listen(8000);
 
-app.get(
-  "/content",
-  checkVersionMiddleware,
-  (req: express.Request, res: express.Response) => {
-    log.info("GET /content", req.headers["user-agent"]);
-    sendContent(res, render());
-  }
+console.log(
+  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
 );
-
-// respond with "hello world" when a GET request is made to the homepage
-app.get("/", (req: express.Request, res: express.Response) => {
-  log.info("GET /", req.headers["user-agent"]);
-  sendContent(res, getIndex(render()));
-});
-
-app.listen(PORT);
-log.info("Listening on " + String(PORT));
-
-process.on("SIGINT", function () {
-  log.info("Caught interrupt signal");
-  process.exit();
-});

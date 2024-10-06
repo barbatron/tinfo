@@ -1,6 +1,5 @@
-import fetch from "node-fetch";
-import { log } from "../../log.ts";
-import { Departure } from "../../types.ts";
+import { log } from "../../log";
+import { Departure } from "../../types";
 
 export class SlRealtimeClient {
   public constructor(
@@ -11,7 +10,9 @@ export class SlRealtimeClient {
       timeWindowMinutes: number;
       direction?: string;
     }
-  ) {}
+  ) {
+    console.log(SlRealtimeClient.name, this.conf);
+  }
 
   public async fetch() {
     const url = new URL(this.conf.apiUrl);
@@ -21,7 +22,7 @@ export class SlRealtimeClient {
     url.searchParams.set("Bus", "false");
 
     const response = await fetch(url);
-    if (!response.ok) throw Error("Request failed");
+    if (!response.ok) throw Error("Request failed: " + response.statusText);
 
     const data = (await response.json()) as any;
     log.info(data, "SL Departures API respponse", data);

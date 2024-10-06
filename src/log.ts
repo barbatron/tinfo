@@ -1,15 +1,15 @@
-import { pino } from "pino";
+// import pino from "pino";
 
-const prettyOpts =
-  process.env.NODE_ENV !== "production"
-    ? {
-        transport: {
-          target: "pino-pretty",
-          options: {
-            colorize: true,
-          },
-        },
-      }
-    : {};
+// const prettyOpts =
+//   process.env.NODE_ENV !== "production"
+//     ? {
+//         transport: {
+//           target: "pino-pretty",
+//           options: {
+//             colorize: true,
+//           },
+//         },
+//       }
+//     : {};
 
-export const log = pino({ ...prettyOpts });
+export const log = console; // pino({ ...prettyOpts });

@@ -1,8 +1,4 @@
-import { log } from "./log.ts";
-
-import { config } from "dotenv";
-
-config();
+import { log } from "./log";
 
 type ConfigAccessor<T, TReq extends boolean> = (
   key: string,
