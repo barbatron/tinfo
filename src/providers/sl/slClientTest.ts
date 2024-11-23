@@ -55,6 +55,7 @@ export class SlClientTest {
           d.time.expectedDateTime ?? d.time.timeTabledDateTime
         ),
         scheduledTime: new Date(d.time.timeTabledDateTime),
+        displayTime: d.time.displayTime,
         direction: String(d.transport.direction), // TODO: type
         destination: d.destination,
       }));

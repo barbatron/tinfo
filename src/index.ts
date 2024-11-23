@@ -30,6 +30,8 @@ const startTime = new Date();
 
 const client = createSlClientTest(config);
 
+let timeOffsetSeconds = 0;
+
 async function fetchNextDeparture() {
   return await client.fetch();
 }
@@ -62,6 +64,12 @@ const decorateDeparture = (d: Departure): DepartureExt => {
 let lastDeparturesRaw: any[] = [];
 let fetchError: Error | null = null;
 
+const clampTime = (time: Date) => {
+  const now = new Date();
+  if (time < now) return now;
+  return time.toISOString();
+};
+
 const updateDepartures = () =>
   fetchNextDeparture()
     .then((metros) => {
@@ -69,11 +77,25 @@ const updateDepartures = () =>
       fetchError = null;
       log.info(
         "Updated departures (#)",
+        new Date().toISOString(),
         metros.map((m: Departure) => ({
-          expectedTime: m.expectedTime,
           destination: m.destination,
+          scheduledTime: m.scheduledTime,
+          expectedTime: m.expectedTime,
+          displayTime: m.displayTime,
         }))
       );
+      const minExpectedTimeInThePast = metros.reduce((min, m) => {
+        const expectedTime = dayjs(m.expectedTime);
+        return expectedTime.isBefore(min) ? expectedTime : min;
+      }, dayjs());
+      const diffSeconds = minExpectedTimeInThePast.diff(dayjs(), "seconds");
+      if (Math.abs(diffSeconds) > Math.abs(timeOffsetSeconds))
+        timeOffsetSeconds = diffSeconds;
+      console.log("minExpectedTimeInThePast", {
+        diffSeconds,
+        timeOffsetSeconds,
+      });
     })
     .catch((err) => {
       fetchError = err;
@@ -97,7 +119,7 @@ const render = () => {
 
     // format line strings
     const lines = realisticDepartures.map((departure) => {
-      const expectedTime = departure.expectedTime;
+      const expectedTime = clampTime(departure.expectedTime);
       const hurryStr =
         departure.successProbPow < 1
           ? departure.successProb < 0

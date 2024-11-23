@@ -1,6 +1,7 @@
 export interface Departure {
   scheduledTime: Date;
   expectedTime: Date;
+  displayTime?: string;
   destination: string;
   direction?: string;
 }
