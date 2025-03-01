@@ -7,14 +7,14 @@ const SL_TRANSPORT_DEPARTURES_API_URL =
 
 export function createSlTransportApiClient(config: Config): DepartureClient {
   const SITE_ID = config.getString("SL_SITE_ID", true)!;
-  const JOURNEY_DIRECTION = config.getString("SL_JOURNEY_DIRECTION", true)!;
   const TIME_WINDOW_MINUTES =
     config.getNumber("TIME_WINDOW_MINUTES", false) ?? 30;
-
+  const apiUrl =
+    config.getString("SL_TRANSPORT_DEPARTURES_API_URL", false) ??
+    SL_TRANSPORT_DEPARTURES_API_URL;
   return new SlTransportApiClient({
-    apiUrl: SL_TRANSPORT_DEPARTURES_API_URL,
+    apiUrl,
     siteId: SITE_ID,
-    direction: JOURNEY_DIRECTION,
     timeWindowMinutes: TIME_WINDOW_MINUTES,
   });
 }

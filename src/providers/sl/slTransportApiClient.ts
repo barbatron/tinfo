@@ -10,7 +10,6 @@ export class SlTransportApiClient implements DepartureClient {
       apiUrl: string;
       siteId: string;
       timeWindowMinutes: number;
-      direction?: string;
     }
   ) {
     console.log(SlTransportApiClient.name, this.conf);
