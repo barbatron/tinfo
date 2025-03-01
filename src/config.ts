@@ -64,13 +64,15 @@ export const getConfig = fromEnv.getString.bind(fromEnv);
 
 if (getConfig("DEBUG", false)) console.log("DEBUG enabled");
 
-const SL_PAGE_INFO = {
-  PROVIDER: "SL",
+type PROVIDER = "SL" | "VT";
+
+export const SL_PAGE_INFO = {
+  PROVIDER: "SL" as PROVIDER,
   STOP_NAME: "Hökis",
 };
 
-const VT_PAGE_INFO = {
-  PROVIDER: "VT",
+export const VT_PAGE_INFO = {
+  PROVIDER: "VT" as PROVIDER,
   STOP_NAME: "Marklandsgatan",
 };
 

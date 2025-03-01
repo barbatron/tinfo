@@ -24,32 +24,56 @@ import { Departure, DepartureExt } from "./types";
 
 import * as conf from "./config";
 import { createVtClient } from "./providers/vt";
+import { DepartureClient } from "./providers/types";
 
 const config = conf.fromEnv;
 
 const startTime = new Date();
 
-const { client, JOURNEY_DIRECTION } = (() => {
-  switch (conf.PAGE_INFO.PROVIDER) {
-    case "SL": {
-      const client = createSlTransportApiClient(config);
-      const JOURNEY_DIRECTION =
-        config.getString("SL_JOURNEY_DIRECTION", false) ?? "1";
-      return { client, JOURNEY_DIRECTION };
-    }
-    case "VT": {
-      const client = createVtClient(config);
-      const JOURNEY_DIRECTION = "-";
-      return { client, JOURNEY_DIRECTION };
-    }
-  }
-  throw Error("Unknown provider " + conf.PAGE_INFO.PROVIDER);
-})();
+type Provider = "SL" | "VT";
+const providers: Record<
+  Provider,
+  { client: DepartureClient; direction: string }
+> = {
+  SL: {
+    client: createSlTransportApiClient(config),
+    direction: config.getString("SL_JOURNEY_DIRECTION", false) ?? "1",
+  },
+  VT: {
+    client: createVtClient(config),
+    direction: "-",
+  },
+};
+
+const chosenProvider: Provider = "SL";
+
+function forProvider<T>(fn: (client: DepartureClient) => T): T {
+  const p = providers[chosenProvider];
+  return fn(p.client);
+}
+
+function mainDirection(): string {
+  return providers[chosenProvider].direction;
+}
+console.log("mainDirection", mainDirection());
+
+/////////////////////////////
 
 let timeOffsetSeconds = 0;
 
+let lastDeparturesRaw: any[] = [];
+let fetchError: Error | null = null;
+
+const clampTime = (time: Date) => {
+  const now = new Date();
+  if (time < now) return now;
+  return time.toISOString();
+};
+
+/////////////////////////////
+
 async function fetchNextDeparture() {
-  return await client.fetch();
+  return await forProvider((client) => client.fetch());
 }
 
 const decorateDepartures = (departures: Departure[] = []): DepartureExt[] =>
@@ -75,15 +99,6 @@ const decorateDeparture = (d: Departure): DepartureExt => {
     canMakeIt: d2.secondsToSpare >= -RUSH_SECONDS_GAINED,
   };
   return d3;
-};
-
-let lastDeparturesRaw: any[] = [];
-let fetchError: Error | null = null;
-
-const clampTime = (time: Date) => {
-  const now = new Date();
-  if (time < now) return now;
-  return time.toISOString();
 };
 
 const updateDepartures = () =>
@@ -128,11 +143,12 @@ const render = () => {
   const decoratedDepartures = decorateDepartures(lastDeparturesRaw);
 
   const departuresByDirection = decoratedDepartures.reduce((map, dep) => {
-    const key = dep.direction ?? JOURNEY_DIRECTION;
+    const key = dep.direction ?? providers[chosenProvider].direction;
     if (map.has(key)) map.get(key)!.push(dep);
     else map.set(key, [dep]);
     return map;
   }, new Map<string, DepartureExt[]>());
+
   log.debug("[render] departuresByDirection", departuresByDirection);
 
   const renderDirection = (departures: DepartureExt[]) => {
@@ -166,26 +182,18 @@ const render = () => {
     return lines;
   };
 
-  const topLevelLines = Array.from(
-    renderDirection(departuresByDirection.get(JOURNEY_DIRECTION) ?? []) ?? []
-  );
+  const mainDirectionDepartures = departuresByDirection.get(mainDirection());
+  log.info("mainDirectionDepartures", mainDirectionDepartures);
+
+  const topLevelLines = renderDirection(mainDirectionDepartures ?? []);
 
   const otherDirectionKeys = Array.from(departuresByDirection.keys()).filter(
-    (k) => k !== JOURNEY_DIRECTION
+    (k) => k !== mainDirection()
   );
-  const otherDirections = otherDirectionKeys.flatMap(
-    (k) =>
-      renderDirection(
-        Array.from(departuresByDirection.entries())
-          // @ts-ignore
-          .filter(
-            ([k]: [any]) =>
-              typeof k !== "undefined" && k !== String(JOURNEY_DIRECTION)
-          )
-          // @ts-ignore
-          .flatMap(([, v]: [any, any]) => v) ?? []
-      ) ?? []
+  const otherDirections = otherDirectionKeys.flatMap((k) =>
+    renderDirection(departuresByDirection.get(k) ?? [])
   );
+
   const topLevelLinesHtml =
     `<div style="display: block; margin-bottom: ${DEST_BLOCK_MARGIN_BOT}; white-space: nowrap">` +
     topLevelLines.join(`<br/>`) +
