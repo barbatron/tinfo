@@ -11,6 +11,7 @@
     "start": "bun run src/index.ts",
     "docker:build": "docker build -t dev.jolsson.tinfo:latest .",
     "docker:start": "docker run -d --env-file ./.env -e PORT=8000 -p 8000:8000 --restart unless-stopped --name tinfo dev.jolsson.tinfo:latest",
+    "docker:push": "docker tag dev.jolsson.tinfo:latest europe-north1-docker.pkg.dev/ornate-hangar-243102/gcf-artifacts/tinfo:latest && docker push europe-north1-docker.pkg.dev/ornate-hangar-243102/gcf-artifacts/tinfo",
     "docker": "docker rm -f tinfo || true && bun run docker:build && bun run docker:start"
   },
   "dependencies": {
