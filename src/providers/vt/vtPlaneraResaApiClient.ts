@@ -72,8 +72,9 @@ export class VtPlaneraResaApiClient implements DepartureClient {
             r.estimatedTime ?? r.estimatedOtherwisePlannedTime ?? r.plannedTime,
           ),
           scheduledTime: new Date(r.plannedTime),
+          direction: undefined,
           // displayTime: r.,
-          direction: r.serviceJourney.direction ?? "Unknown",
+          // direction: r.serviceJourney.direction ?? "Unknown",
           destination: r.serviceJourney.direction ?? "Unknown",
         };
       });
