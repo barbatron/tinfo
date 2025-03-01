@@ -2,7 +2,7 @@ import { log } from "./log";
 
 type ConfigAccessor<T, TReq extends boolean> = (
   key: string,
-  required: TReq
+  required: TReq,
 ) => TReq extends true ? T : T | null;
 
 export interface Config {
@@ -42,7 +42,7 @@ log.info(
     WALK_TIME_SECONDS,
     RUSH_SECONDS_GAINED,
   },
-  "CONFIG"
+  "CONFIG",
 );
 
 export const fromEnv: Config = {
@@ -62,15 +62,27 @@ export const fromEnv: Config = {
 
 export const getConfig = fromEnv.getString.bind(fromEnv);
 
+const SL_PAGE_INFO = {
+  PROVIDER: "SL",
+  STOP_NAME: "Hökis",
+};
+
+const VT_PAGE_INFO = {
+  PROVIDER: "VT",
+  STOP_NAME: "Marklandsgatan",
+};
+
+export const PAGE_INFO = SL_PAGE_INFO;
+
 export {
-  PORT,
-  TIME_WINDOW_MINUTES,
-  FETCH_INTERVAL_MS,
-  REFRESH_INTERVAL_MS,
-  WALK_TIME_SECONDS,
-  RUSH_SECONDS_GAINED,
-  STATION_NAME_REPLACEMENTS,
+  DEST_BLOCK_MARGIN_BOT,
   DEST_FONT_SIZE,
   DEST_NAME_OPACITY,
-  DEST_BLOCK_MARGIN_BOT,
+  FETCH_INTERVAL_MS,
+  PORT,
+  REFRESH_INTERVAL_MS,
+  RUSH_SECONDS_GAINED,
+  STATION_NAME_REPLACEMENTS,
+  TIME_WINDOW_MINUTES,
+  WALK_TIME_SECONDS,
 };

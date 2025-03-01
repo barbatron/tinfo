@@ -1,4 +1,4 @@
-import { DEST_FONT_SIZE } from "./config";
+import { DEST_FONT_SIZE, PAGE_INFO } from "./config";
 
 const scrollScript = `
 (function() {
@@ -40,7 +40,7 @@ const getIndex = (content?: string) => `
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta http-equiv="X-UA-Compatible" content="ie=edge">
-      <title>SL Hökis</title>
+      <title>${PAGE_INFO.PROVIDER} ${PAGE_INFO.STOP_NAME}</title>
       <style>
         body {
           font-family: 'Trebuchet MS', sans-serif;

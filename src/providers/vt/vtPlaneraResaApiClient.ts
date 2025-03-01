@@ -26,7 +26,7 @@ export function createStopAreasApi(
     conf.authClient.getToken().then((t) => `${t.token_type} ${t.access_token}`);
   const stopAreasApiConfig = new Configuration({
     accessToken: authTokenAccessor,
-    middleware: [logMiddleware],
+    // middleware: [logMiddleware],
   });
   const stopAreasApi = new StopAreasApi(stopAreasApiConfig);
   return stopAreasApi;

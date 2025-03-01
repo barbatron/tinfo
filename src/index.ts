@@ -10,6 +10,7 @@ import {
   DEST_BLOCK_MARGIN_BOT,
   DEST_NAME_OPACITY,
   FETCH_INTERVAL_MS,
+  PAGE_INFO,
   RUSH_SECONDS_GAINED,
   // Esthetic
   STATION_NAME_REPLACEMENTS,
@@ -28,11 +29,22 @@ const config = conf.fromEnv;
 
 const startTime = new Date();
 
-// const client = createSlTransportApiClient(config);
-// const JOURNEY_DIRECTION = conf.getString("SL_JOURNEY_DIRECTION");
-
-const client = createVtClient(config);
-const JOURNEY_DIRECTION = "-";
+const { client, JOURNEY_DIRECTION } = (() => {
+  switch (conf.PAGE_INFO.PROVIDER) {
+    case "SL": {
+      const client = createSlTransportApiClient(config);
+      const JOURNEY_DIRECTION =
+        config.getString("SL_JOURNEY_DIRECTION", false) ?? "1";
+      return { client, JOURNEY_DIRECTION };
+    }
+    case "VT": {
+      const client = createVtClient(config);
+      const JOURNEY_DIRECTION = "-";
+      return { client, JOURNEY_DIRECTION };
+    }
+  }
+  throw Error("Unknown provider " + conf.PAGE_INFO.PROVIDER);
+})();
 
 let timeOffsetSeconds = 0;
 
@@ -155,9 +167,9 @@ const render = () => {
   );
 
   const otherDirectionKeys = Array.from(departuresByDirection.keys()).filter(
-    (k) => k !== JOURNEY_DIRECTION
+    (k) => k !== JOURNEY_DIRECTION,
   );
-  const otherDirections = otherDirectionKeys.map((k) =>
+  const otherDirections = otherDirectionKeys.flatMap((k) =>
     renderDirection(
       Array.from(departuresByDirection.entries())
         // @ts-ignore
