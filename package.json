@@ -4,7 +4,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts",
-    "start": "bun run src/index.ts"
+    "start": "bun run src/index.ts",
+    "build:docker": "docker build -t dev.jolsson.tinfo:latest .",
+    "start:docker": "docker run -d --env-file .env -e PORT=8000 -p 8000:8000 --restart unless-stopped --name tinfo dev.jolsson.tinfo:latest"
   },
   "dependencies": {
     "dayjs": "^1.11.13",

@@ -22,12 +22,14 @@ import { createSlTransportApiClient } from "./providers/sl";
 import { Departure, DepartureExt } from "./types";
 
 import * as conf from "./config";
+import { createVtClient } from "./providers/vt";
 
 const config = conf.fromEnv;
 
 const startTime = new Date();
 
-const client = createSlTransportApiClient(config);
+// const client = createSlTransportApiClient(config);
+const client = createVtClient(config);
 
 let timeOffsetSeconds = 0;
 
@@ -217,7 +219,7 @@ const app = new Elysia()
     set.headers["content-type"] = "text/html";
     return render();
   })
-  .listen(8000);
+  .listen(conf.PORT);
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`

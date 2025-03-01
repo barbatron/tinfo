@@ -2,8 +2,9 @@ import dayjs from "dayjs";
 import { log } from "../../log.js";
 import { Departure } from "../../types.js";
 import { Sl } from "./types.js";
+import { DepartureClient } from "../types.js";
 
-export class SlTransportApiClient {
+export class SlTransportApiClient implements DepartureClient {
   public constructor(
     private readonly conf: {
       apiUrl: string;
