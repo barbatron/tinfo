@@ -1,3 +1,3 @@
 export interface DepartureClient {
-  public fetch(): Promise<Departure[]>;
+  public fetch(params?: Partial<RenderParams>): Promise<Departure[]>;
 }

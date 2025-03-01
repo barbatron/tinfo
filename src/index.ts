@@ -20,7 +20,7 @@ import {
   WALK_TIME_SECONDS,
 } from "./config";
 import { createSlTransportApiClient } from "./providers/sl";
-import { Departure, DepartureExt } from "./types";
+import { Departure, DepartureExt, FetchParams } from "./types";
 
 import * as conf from "./config";
 import { createVtClient } from "./providers/vt";
@@ -36,18 +36,24 @@ const providers: Record<
   {
     client: DepartureClient;
     direction: string;
+    stopName: string;
+    preferredMot: string;
     timeOffsetSeconds?: number;
     lastDeparturesRaw?: Departure[];
-    fetchError?: Error;
+    fetchError?: Error | unknown;
   }
 > = {
   SL: {
     client: createSlTransportApiClient(config),
     direction: config.getString("SL_JOURNEY_DIRECTION", false) ?? "1",
+    stopName: "Hökis",
+    preferredMot: conf.SL_PAGE_INFO.preferredMot,
   },
   VT: {
     client: createVtClient(config),
     direction: "-",
+    stopName: "Marklandsgatan",
+    preferredMot: conf.VT_PAGE_INFO.preferredMot,
   },
 };
 
@@ -96,57 +102,74 @@ const decorateDeparture = (d: Departure): DepartureExt => {
 
 /////////////////////////////
 
-const updateDepartures = (providerName: Provider) => {
+const updateDepartures = async (
+  providerName: Provider,
+  params?: Partial<FetchParams>
+) => {
   const prov = p(providerName);
-  return prov.client
-    .fetch()
-    .then((departures) => {
+  const now = dayjs();
+  try {
+    const allDepartures = await prov.client.fetch(params);
+    const departures = allDepartures
+      // Filter out non-metro departures
+      .filter((d) => d.mot === (params?.mot ?? prov.preferredMot))
+      // Filter out departures that are too far in the future
+      .filter(
+        (d_1) => dayjs(d_1.expected).diff(now, "minutes") <= TIME_WINDOW_MINUTES
+      );
+    if (!params) {
       prov.lastDeparturesRaw = [...departures];
       prov.fetchError = undefined;
-      log.info(
-        `Updated departures for ${providerName} (#)`,
-        new Date().toISOString(),
-        departures.length
-      );
-      log.debug(
-        "Departures",
-        departures.map((m) => ({
-          destination: m.destination,
-          scheduledTime: m.scheduledTime,
-          expectedTime: m.expectedTime,
-          displayTime: m.displayTime,
-        }))
-      );
+    }
+    log.info(
+      `Updated departures for ${providerName} (#)`,
+      new Date().toISOString(),
+      params,
+      departures.length
+    );
+    log.debug(
+      "Departures",
+      params,
+      departures.map((m) => ({
+        destination: m.destination,
+        scheduledTime: m.scheduledTime,
+        expectedTime: m.expectedTime,
+        displayTime: m.displayTime,
+      }))
+    );
 
-      // Misc clamping experiments if expected time of departure is in the past
-      const minExpectedTimeInThePast = departures.reduce((min, m) => {
-        const expectedTime = dayjs(m.expectedTime);
-        return expectedTime.isBefore(min) ? expectedTime : min;
-      }, dayjs());
+    // Misc clamping experiments if expected time of departure is in the past
+    const minExpectedTimeInThePast = departures.reduce((min, m_1) => {
+      const expectedTime = dayjs(m_1.expectedTime);
+      return expectedTime.isBefore(min) ? expectedTime : min;
+    }, dayjs());
 
-      const diffSeconds = minExpectedTimeInThePast.diff(dayjs(), "seconds");
-      if (
-        Math.abs(diffSeconds) > Math.abs(prov.timeOffsetSeconds ?? Infinity)
-      ) {
-        prov.timeOffsetSeconds = diffSeconds;
-      }
+    const diffSeconds = minExpectedTimeInThePast.diff(dayjs(), "seconds");
+    if (Math.abs(diffSeconds) > Math.abs(prov.timeOffsetSeconds ?? Infinity)) {
+      prov.timeOffsetSeconds = diffSeconds;
+    }
 
-      log.debug("minExpectedTimeInThePast", {
-        diffSeconds,
-        timeOffsetSeconds: prov.timeOffsetSeconds,
-      });
-    })
-    .catch((err) => {
-      prov.fetchError = err;
-      log.error("updateDepartures failed", err);
+    log.debug("minExpectedTimeInThePast", {
+      diffSeconds,
+      timeOffsetSeconds: prov.timeOffsetSeconds,
     });
+    return departures;
+  } catch (err) {
+    prov.fetchError = err;
+    log.error("updateDepartures failed", err);
+  }
 };
 
-const render = (provider: Provider) => {
+const render = async (provider: Provider, params?: Partial<FetchParams>) => {
   const prov = p(provider);
-  if (prov.fetchError) throw Error(prov.fetchError.message);
+  const parms =
+    params && Object.values(params).some((v) => !!v) ? params : undefined;
+  console.log("fetch", provider, parms);
+  const departures = await updateDepartures(provider, parms);
+  if (prov.fetchError) throw Error("Fetch error", { cause: prov.fetchError });
+  if (!departures) return "No departures";
 
-  const decoratedDepartures = decorateDepartures(prov.lastDeparturesRaw);
+  const decoratedDepartures = decorateDepartures(departures);
 
   const departuresByDirection = decoratedDepartures.reduce((map, dep) => {
     const key = dep.direction ?? prov.direction;
@@ -188,13 +211,14 @@ const render = (provider: Provider) => {
     return lines;
   };
 
-  const mainDirectionDepartures = departuresByDirection.get(prov.direction);
+  const mainDir = params?.dir ?? prov.direction ?? "-";
+  const mainDirectionDepartures = departuresByDirection.get(mainDir);
   log.info("mainDirectionDepartures", mainDirectionDepartures);
 
   const topLevelLines = renderDirection(mainDirectionDepartures ?? []);
 
   const otherDirectionKeys = Array.from(departuresByDirection.keys()).filter(
-    (k) => k !== prov.direction
+    (k) => k !== mainDir
   );
   const otherDirections = otherDirectionKeys.flatMap((k) =>
     renderDirection(departuresByDirection.get(k) ?? [])
@@ -230,28 +254,60 @@ const app = new Elysia()
     return redirect(`/${defaultProvider}`, 303);
   })
 
+  .get("/healthz", () => {
+    return "OK";
+  })
+
   .get("/content", ({ redirect }) => {
     return redirect(`/${defaultProvider}/content`, 303);
   })
 
-  .get("/:provider", ({ params: { provider: providerStr }, set, headers }) => {
-    const provider = providerStr.toUpperCase() as Provider;
-    const prov = p(provider);
-    log.info("GET /:provider", { provider }, headers["user-agent"]);
-    if (prov.fetchError) {
-      throw prov.fetchError;
+  .get(
+    "/:provider",
+    async ({ query, params: { provider: providerStr }, set, headers }) => {
+      const provider = providerStr.toUpperCase() as Provider;
+      const prov = p(provider);
+      log.info("GET /:provider", { provider }, headers["user-agent"], query);
+      if (prov.fetchError) {
+        throw prov.fetchError;
+      }
+      set.headers["content-type"] = "text/html";
+      const { stop_id, mot, dir } = query ?? {};
+      const fetchParams: Partial<FetchParams> | undefined =
+        !!stop_id || !!mot || !!dir
+          ? {
+              stop_id: !!stop_id ? String(stop_id) : undefined,
+              mot: !!mot ? String(mot) : undefined,
+              dir: !!dir ? String(dir) : undefined,
+            }
+          : undefined;
+      const content = await render(provider, fetchParams);
+      return getIndex({ name: provider, stopName: prov.stopName }, content);
     }
-    set.headers["content-type"] = "text/html";
-    return getIndex(provider, render(provider));
-  })
+  )
 
   .get(
     "/:provider/content",
-    ({ params: { provider: providerStr }, headers, set }) => {
+    async ({ query, params: { provider: providerStr }, headers, set }) => {
       const provider = providerStr.toUpperCase() as Provider;
-      log.info(`GET /:provider/content`, { provider }, headers["user-agent"]);
+      log.info(
+        `GET /:provider/content`,
+        { provider },
+        headers["user-agent"],
+        query
+      );
       set.headers["content-type"] = "text/html";
-      return render(provider as Provider);
+      const { stop_id, mot, dir } = query ?? {};
+      const fetchParams: Partial<FetchParams> | undefined =
+        !!stop_id || !!mot || !!dir
+          ? {
+              stop_id: !!stop_id ? String(stop_id) : undefined,
+              mot: !!mot ? String(mot) : undefined,
+              dir: !!dir ? String(dir) : undefined,
+            }
+          : undefined;
+      const content = await render(provider, fetchParams);
+      return content;
     }
   )
 

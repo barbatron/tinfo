@@ -33,14 +33,17 @@ const scrollScript = `
   }
 })();`;
 
-const getIndex = (provider: "SL" | "VT", content?: string) => `
+const getIndex = (
+  p: { name: "SL" | "VT"; stopName: string },
+  content?: string
+) => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta http-equiv="X-UA-Compatible" content="ie=edge">
-      <title>${PAGE_INFO.PROVIDER} ${PAGE_INFO.STOP_NAME}</title>
+      <title>${p.name} ${p.stopName}</title>
       <style>
         body {
           font-family: 'Trebuchet MS', sans-serif;
@@ -76,10 +79,10 @@ const getIndex = (provider: "SL" | "VT", content?: string) => `
         let knownServerVer;
 
         function loadContent() { 
-          console.log('Loading contentä');
+          console.log('Loading content');
           const headers = !!knownServerVer ? { ['x-server-version']: knownServerVer } : {}
-          
-          const updatePromise = fetch('/${provider}/content', { headers })
+          const q = new URLSearchParams(window.location.search).toString();
+          const updatePromise = fetch('/${p.name}/content?' + q, { headers })
             .then(function (response) {
               const { redirected, headers } = response;
               console.log('Got response', { redirected, headers });

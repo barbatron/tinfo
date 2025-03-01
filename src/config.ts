@@ -45,15 +45,17 @@ log.info(
   "CONFIG"
 );
 
+const env = Bun.env;
+
 export const fromEnv: Config = {
   getString: function <T extends boolean>(key: string, required?: T) {
-    const isPresent = key in process.env && !!process.env[key];
+    const isPresent = key in env && !!env[key];
     if (required && !isPresent) throw Error("Missing/empty config: " + key);
-    const value = String(process.env[key]!);
+    const value = String(env[key]!);
     return value;
   },
   getNumber: function (key: string, required = true) {
-    const isPresent = key in process.env && !!process.env[key];
+    const isPresent = key in env && !!env[key];
     if (required && !isPresent) throw Error("Missing/empty config: " + key);
     const str = this.getString(key, required);
     return Number(str);
@@ -69,11 +71,13 @@ type PROVIDER = "SL" | "VT";
 export const SL_PAGE_INFO = {
   PROVIDER: "SL" as PROVIDER,
   STOP_NAME: "Hökis",
+  preferredMot: "METRO",
 };
 
 export const VT_PAGE_INFO = {
   PROVIDER: "VT" as PROVIDER,
   STOP_NAME: "Marklandsgatan",
+  preferredMot: "tram",
 };
 
 export const PAGE_INFO = SL_PAGE_INFO;

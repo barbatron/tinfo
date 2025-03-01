@@ -20,7 +20,7 @@ const logMiddleware: Middleware = {
 };
 
 export function createStopAreasApi(
-  conf: Readonly<Vt.PlaneraResaApi.ClientConfig>,
+  conf: Readonly<Vt.PlaneraResaApi.ClientConfig>
 ): StopAreasApi {
   const authTokenAccessor = () =>
     conf.authClient.getToken().then((t) => `${t.token_type} ${t.access_token}`);
@@ -36,7 +36,7 @@ export class VtPlaneraResaApiClient implements DepartureClient {
   private readonly stopAreasClient: StopAreasApi;
 
   public constructor(
-    private readonly conf: Readonly<Vt.PlaneraResaApi.ClientConfig>,
+    private readonly conf: Readonly<Vt.PlaneraResaApi.ClientConfig>
   ) {
     this.stopAreasClient = createStopAreasApi(conf);
   }
@@ -47,12 +47,11 @@ export class VtPlaneraResaApiClient implements DepartureClient {
       timeSpanInMinutes: this.conf.timeWindowMinutes,
     };
     log.debug("[vt] Requesting departures", req);
-    const response:
-      VTApiPlaneraResaWebV4ModelsDeparturesAndArrivalsGetDeparturesResponse =
-        await this.stopAreasClient.stopAreasStopAreaGidDeparturesGet(req);
+    const response: VTApiPlaneraResaWebV4ModelsDeparturesAndArrivalsGetDeparturesResponse =
+      await this.stopAreasClient.stopAreasStopAreaGidDeparturesGet(req);
     if (!response.results) {
       throw Error(
-        `No results in response:\n${JSON.stringify(response, null, 2)}`,
+        `No results in response:\n${JSON.stringify(response, null, 2)}`
       );
     }
 
@@ -61,7 +60,7 @@ export class VtPlaneraResaApiClient implements DepartureClient {
         (r) =>
           !!r.serviceJourney?.line &&
           r.serviceJourney.line?.transportMode ==
-            VTApiPlaneraResaCoreModelsPositionTransportMode.Tram,
+            VTApiPlaneraResaCoreModelsPositionTransportMode.Tram
       )
       .map((r) => {
         if (!r.serviceJourney?.line) {
@@ -69,13 +68,14 @@ export class VtPlaneraResaApiClient implements DepartureClient {
         }
         return {
           expectedTime: new Date(
-            r.estimatedTime ?? r.estimatedOtherwisePlannedTime ?? r.plannedTime,
+            r.estimatedTime ?? r.estimatedOtherwisePlannedTime ?? r.plannedTime
           ),
           scheduledTime: new Date(r.plannedTime),
           direction: undefined,
           // displayTime: r.,
           // direction: r.serviceJourney.direction ?? "Unknown",
           destination: r.serviceJourney.direction ?? "Unknown",
+          mot: r.serviceJourney.line.transportMode,
         };
       });
   }

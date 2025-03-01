@@ -4,6 +4,7 @@ export interface Departure {
   displayTime?: string;
   destination: string;
   direction?: string;
+  mot?: string;
 }
 
 export interface DepartureExt extends Departure {
@@ -12,3 +13,9 @@ export interface DepartureExt extends Departure {
   expectedInSeconds: number;
   scheduleDriftSeconds: number;
 }
+
+export type FetchParams = Readonly<{
+  stop_id: string;
+  dir: string;
+  mot: string;
+}>;
