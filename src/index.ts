@@ -61,7 +61,7 @@ const decorateDeparture = (d: Departure): DepartureExt => {
     expectedInSeconds: dayjs(d.expectedTime).diff(new Date(), "seconds"),
     scheduleDriftSeconds: dayjs(d.expectedTime).diff(
       d.scheduledTime,
-      "seconds",
+      "seconds"
     ),
   };
   const d2 = {
@@ -94,7 +94,7 @@ const updateDepartures = () =>
       log.info(
         "Updated departures (#)",
         new Date().toISOString(),
-        metros.length,
+        metros.length
       );
       log.debug(
         metros.map((m: Departure) => ({
@@ -102,7 +102,7 @@ const updateDepartures = () =>
           scheduledTime: m.scheduledTime,
           expectedTime: m.expectedTime,
           displayTime: m.displayTime,
-        })),
+        }))
       );
       const minExpectedTimeInThePast = metros.reduce((min, m) => {
         const expectedTime = dayjs(m.expectedTime);
@@ -144,9 +144,12 @@ const render = () => {
     // format line strings
     const lines = realisticDepartures.map((departure) => {
       const expectedTime = clampTime(departure.expectedTime);
-      const hurryStr = departure.successProbPow < 1
-        ? departure.successProb < 0 ? "😵" : "😱"
-        : "✨";
+      const hurryStr =
+        departure.successProbPow < 1
+          ? departure.successProb < 0
+            ? "😵"
+            : "😱"
+          : "✨";
 
       let timeLeft = "";
       if (departure.displayTime) timeLeft = departure.displayTime;
@@ -155,7 +158,8 @@ const render = () => {
         timeLeft = timeLeftMinutes < 1 ? "<1 min" : `${timeLeftMinutes} min`;
       }
 
-      const destStr = STATION_NAME_REPLACEMENTS.get(departure.destination) ??
+      const destStr =
+        STATION_NAME_REPLACEMENTS.get(departure.destination) ??
         departure.destination;
       return `${hurryStr} ${timeLeft} <span style="opacity: ${DEST_NAME_OPACITY}">${destStr}</span>`;
     });
@@ -163,22 +167,24 @@ const render = () => {
   };
 
   const topLevelLines = Array.from(
-    renderDirection(departuresByDirection.get(JOURNEY_DIRECTION) ?? []) ?? [],
+    renderDirection(departuresByDirection.get(JOURNEY_DIRECTION) ?? []) ?? []
   );
 
   const otherDirectionKeys = Array.from(departuresByDirection.keys()).filter(
-    (k) => k !== JOURNEY_DIRECTION,
+    (k) => k !== JOURNEY_DIRECTION
   );
-  const otherDirections = otherDirectionKeys.flatMap((k) =>
-    renderDirection(
-      Array.from(departuresByDirection.entries())
-        // @ts-ignore
-        .filter(([k]: [any]) =>
-          typeof k !== "undefined" && k !== String(JOURNEY_DIRECTION)
-        )
-        // @ts-ignore
-        .flatMap(([, v]: [any, any]) => v) ?? [],
-    ) ?? []
+  const otherDirections = otherDirectionKeys.flatMap(
+    (k) =>
+      renderDirection(
+        Array.from(departuresByDirection.entries())
+          // @ts-ignore
+          .filter(
+            ([k]: [any]) =>
+              typeof k !== "undefined" && k !== String(JOURNEY_DIRECTION)
+          )
+          // @ts-ignore
+          .flatMap(([, v]: [any, any]) => v) ?? []
+      ) ?? []
   );
   const topLevelLinesHtml =
     `<div style="display: block; margin-bottom: ${DEST_BLOCK_MARGIN_BOT}; white-space: nowrap">` +
@@ -246,5 +252,5 @@ const app = new Elysia()
   .listen(conf.PORT);
 
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
+  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
 );
