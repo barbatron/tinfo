@@ -1,0 +1,115 @@
+{
+  "departures": [
+    {
+      "destination": "Skärholmen",
+      "direction_code": 1,
+      "direction": "Skärholmen",
+      "state": "EXPECTED",
+      "display": "2 min",
+      "scheduled": "2025-03-01T13:39:00",
+      "expected": "2025-03-01T13:39:00",
+      "journey": { "id": 2025030100053, "state": "EXPECTED" },
+      "stop_area": { "id": 13338, "name": "Hökarängen", "type": "BUSTERM" },
+      "stop_point": { "id": 13339, "name": "Hökarängen" },
+      "line": {
+        "id": 173,
+        "designation": "173",
+        "transport_mode": "BUS",
+        "group_of_lines": "Blåbuss"
+      },
+      "deviations": []
+    },
+    {
+      "destination": "Skarpnäck",
+      "direction_code": 2,
+      "direction": "Skarpnäck",
+      "state": "EXPECTED",
+      "display": "2 min",
+      "scheduled": "2025-03-01T13:39:00",
+      "expected": "2025-03-01T13:39:00",
+      "journey": {
+        "id": 2025030100042,
+        "state": "NORMALPROGRESS",
+        "prediction_state": "NORMAL"
+      },
+      "stop_area": { "id": 13338, "name": "Hökarängen", "type": "BUSTERM" },
+      "stop_point": { "id": 13601, "name": "Hökarängen" },
+      "line": {
+        "id": 173,
+        "designation": "173",
+        "transport_mode": "BUS",
+        "group_of_lines": "Blåbuss"
+      },
+      "deviations": []
+    },
+    {
+      "destination": "Hallunda centrum",
+      "direction_code": 2,
+      "direction": "Hallunda centrum",
+      "state": "EXPECTED",
+      "display": "4 min",
+      "scheduled": "2025-03-01T13:40:00",
+      "expected": "2025-03-01T13:40:45",
+      "journey": {
+        "id": 2025030100046,
+        "state": "NORMALPROGRESS",
+        "prediction_state": "NORMAL"
+      },
+      "stop_area": { "id": 13338, "name": "Hökarängen", "type": "BUSTERM" },
+      "stop_point": { "id": 13343, "name": "Hökarängen" },
+      "line": {
+        "id": 172,
+        "designation": "172",
+        "transport_mode": "BUS",
+        "group_of_lines": "Blåbuss"
+      },
+      "deviations": []
+    },
+    {
+      "destination": "Odenplan",
+      "direction_code": 1,
+      "direction": "Hässelby strand",
+      "state": "EXPECTED",
+      "display": "5 min",
+      "scheduled": "2025-03-01T13:41:30",
+      "expected": "2025-03-01T13:41:30",
+      "journey": {
+        "id": 2025030114141,
+        "state": "NORMALPROGRESS",
+        "prediction_state": "NORMAL"
+      },
+      "stop_area": { "id": 1861, "name": "Hökarängen", "type": "METROSTN" },
+      "stop_point": { "id": 1861, "name": "Hökarängen", "designation": "1" },
+      "line": {
+        "id": 18,
+        "designation": "18",
+        "transport_mode": "METRO",
+        "group_of_lines": "Tunnelbanans gröna linje"
+      },
+      "deviations": []
+    },
+    {
+      "destination": "Farsta strand",
+      "direction_code": 2,
+      "direction": "Farsta strand",
+      "state": "EXPECTED",
+      "display": "9 min",
+      "scheduled": "2025-03-01T13:44:30",
+      "expected": "2025-03-01T13:45:29",
+      "journey": {
+        "id": 2025030114488,
+        "state": "NORMALPROGRESS",
+        "prediction_state": "NORMAL"
+      },
+      "stop_area": { "id": 1861, "name": "Hökarängen", "type": "METROSTN" },
+      "stop_point": { "id": 1862, "name": "Hökarängen", "designation": "2" },
+      "line": {
+        "id": 18,
+        "designation": "18",
+        "transport_mode": "METRO",
+        "group_of_lines": "Tunnelbanans gröna linje"
+      },
+      "deviations": []
+    }
+  ]
+}

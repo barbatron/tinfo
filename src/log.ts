@@ -1,15 +1,5 @@
-// import pino from "pino";
-
-// const prettyOpts =
-//   process.env.NODE_ENV !== "production"
-//     ? {
-//         transport: {
-//           target: "pino-pretty",
-//           options: {
-//             colorize: true,
-//           },
-//         },
-//       }
-//     : {};
-
-export const log = console; // pino({ ...prettyOpts });
+export const log = {
+  ...console,
+  debug: (...args: unknown[]) =>
+    process.env.DEBUG && console.debug.apply(console, args),
+}; // pino({ ...prettyOpts });

@@ -1,4 +1,4 @@
-import { REFRESH_INTERVAL_MS, DEST_FONT_SIZE } from "./config";
+import { DEST_FONT_SIZE } from "./config";
 
 const scrollScript = `
 (function() {

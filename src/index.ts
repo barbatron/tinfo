@@ -1,4 +1,4 @@
-import { Context, Elysia } from "elysia";
+import { Elysia } from "elysia";
 import getIndex from "./html-template";
 import { log } from "./log";
 
@@ -10,7 +10,6 @@ import {
   DEST_BLOCK_MARGIN_BOT,
   DEST_NAME_OPACITY,
   FETCH_INTERVAL_MS,
-  PORT,
   RUSH_SECONDS_GAINED,
   // Esthetic
   STATION_NAME_REPLACEMENTS,
@@ -19,7 +18,7 @@ import {
   // Emoji calcs
   WALK_TIME_SECONDS,
 } from "./config";
-import { createSlClientTest, createSlRealtimeClient } from "./providers/sl";
+import { createSlTransportApiClient } from "./providers/sl";
 import { Departure, DepartureExt } from "./types";
 
 import * as conf from "./config";
@@ -28,7 +27,7 @@ const config = conf.fromEnv;
 
 const startTime = new Date();
 
-const client = createSlClientTest(config);
+const client = createSlTransportApiClient(config);
 
 let timeOffsetSeconds = 0;
 
@@ -78,6 +77,9 @@ const updateDepartures = () =>
       log.info(
         "Updated departures (#)",
         new Date().toISOString(),
+        metros.length
+      );
+      log.debug(
         metros.map((m: Departure) => ({
           destination: m.destination,
           scheduledTime: m.scheduledTime,
@@ -92,7 +94,7 @@ const updateDepartures = () =>
       const diffSeconds = minExpectedTimeInThePast.diff(dayjs(), "seconds");
       if (Math.abs(diffSeconds) > Math.abs(timeOffsetSeconds))
         timeOffsetSeconds = diffSeconds;
-      console.log("minExpectedTimeInThePast", {
+      log.debug("minExpectedTimeInThePast", {
         diffSeconds,
         timeOffsetSeconds,
       });
@@ -127,8 +129,9 @@ const render = () => {
             : "😱"
           : "✨";
 
-      const timeLeft = dayjs(expectedTime).diff(new Date(), "minutes");
-      // .fromNow(true); // .diff(new Date(), "minutes");
+      const timeLeft =
+        departure.displayTime ??
+        dayjs(expectedTime).diff(new Date(), "minutes");
 
       const destStr =
         STATION_NAME_REPLACEMENTS.get(departure.destination) ??
