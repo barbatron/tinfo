@@ -2,7 +2,7 @@ import { log } from "./log";
 
 type ConfigAccessor<T, TReq extends boolean> = (
   key: string,
-  required: TReq,
+  required: TReq
 ) => TReq extends true ? T : T | null;
 
 export interface Config {
@@ -42,7 +42,7 @@ log.info(
     WALK_TIME_SECONDS,
     RUSH_SECONDS_GAINED,
   },
-  "CONFIG",
+  "CONFIG"
 );
 
 export const fromEnv: Config = {
@@ -61,6 +61,8 @@ export const fromEnv: Config = {
 };
 
 export const getConfig = fromEnv.getString.bind(fromEnv);
+
+if (getConfig("DEBUG", false)) console.log("DEBUG enabled");
 
 const SL_PAGE_INFO = {
   PROVIDER: "SL",

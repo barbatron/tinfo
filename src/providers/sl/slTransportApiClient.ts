@@ -3,6 +3,7 @@ import { log } from "../../log.js";
 import { Departure } from "../../types.js";
 import { Sl } from "./types.js";
 import { DepartureClient } from "../types.js";
+import { getConfig } from "../../config.js";
 
 export class SlTransportApiClient implements DepartureClient {
   public constructor(
@@ -19,10 +20,20 @@ export class SlTransportApiClient implements DepartureClient {
     const url = new URL(this.conf.apiUrl.replace("{siteId}", this.conf.siteId));
 
     const response = await fetch(url);
-    if (!response.ok) throw Error("Request failed: " + response.statusText);
+    if (!response.ok)
+      throw Error(
+        "Request failed: " +
+          response.statusText +
+          "\n" +
+          JSON.stringify(
+            { url: response.url, responseHeaders: response.headers },
+            null,
+            2
+          )
+      );
 
     const data = (await response.json()) as Sl.TransportApi.DeparturesResponse;
-    if (process.env.DEBUG)
+    if (process.env.TRACE)
       log.debug(
         data,
         "SL Transport API response",
