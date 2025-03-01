@@ -33,7 +33,13 @@ const startTime = new Date();
 type Provider = "SL" | "VT";
 const providers: Record<
   Provider,
-  { client: DepartureClient; direction: string }
+  {
+    client: DepartureClient;
+    direction: string;
+    timeOffsetSeconds?: number;
+    lastDeparturesRaw?: Departure[];
+    fetchError?: Error;
+  }
 > = {
   SL: {
     client: createSlTransportApiClient(config),
@@ -45,36 +51,23 @@ const providers: Record<
   },
 };
 
-const chosenProvider: Provider = "SL";
+const defaultProvider: Provider = "SL";
 
-function forProvider<T>(fn: (client: DepartureClient) => T): T {
-  const p = providers[chosenProvider];
-  return fn(p.client);
+function p<T extends Provider | string>(
+  provider: T
+): (typeof providers)[Provider] {
+  const k = provider.toUpperCase() as Provider;
+  if (!providers[k]) throw Error(`No provider for ${provider}`);
+  return providers[k];
 }
-
-function mainDirection(): string {
-  return providers[chosenProvider].direction;
-}
-console.log("mainDirection", mainDirection());
 
 /////////////////////////////
-
-let timeOffsetSeconds = 0;
-
-let lastDeparturesRaw: any[] = [];
-let fetchError: Error | null = null;
 
 const clampTime = (time: Date) => {
   const now = new Date();
   if (time < now) return now;
   return time.toISOString();
 };
-
-/////////////////////////////
-
-async function fetchNextDeparture() {
-  return await forProvider((client) => client.fetch());
-}
 
 const decorateDepartures = (departures: Departure[] = []): DepartureExt[] =>
   Array.from(departures ?? []).map(decorateDeparture);
@@ -101,49 +94,62 @@ const decorateDeparture = (d: Departure): DepartureExt => {
   return d3;
 };
 
-const updateDepartures = () =>
-  fetchNextDeparture()
-    .then((metros) => {
-      lastDeparturesRaw = [...metros];
-      fetchError = null;
+/////////////////////////////
+
+const updateDepartures = (providerName: Provider) => {
+  const prov = p(providerName);
+  return prov.client
+    .fetch()
+    .then((departures) => {
+      prov.lastDeparturesRaw = [...departures];
+      prov.fetchError = undefined;
       log.info(
-        "Updated departures (#)",
+        `Updated departures for ${providerName} (#)`,
         new Date().toISOString(),
-        metros.length
+        departures.length
       );
       log.debug(
-        metros.map((m: Departure) => ({
+        "Departures",
+        departures.map((m) => ({
           destination: m.destination,
           scheduledTime: m.scheduledTime,
           expectedTime: m.expectedTime,
           displayTime: m.displayTime,
         }))
       );
-      const minExpectedTimeInThePast = metros.reduce((min, m) => {
+
+      // Misc clamping experiments if expected time of departure is in the past
+      const minExpectedTimeInThePast = departures.reduce((min, m) => {
         const expectedTime = dayjs(m.expectedTime);
         return expectedTime.isBefore(min) ? expectedTime : min;
       }, dayjs());
+
       const diffSeconds = minExpectedTimeInThePast.diff(dayjs(), "seconds");
-      if (Math.abs(diffSeconds) > Math.abs(timeOffsetSeconds)) {
-        timeOffsetSeconds = diffSeconds;
+      if (
+        Math.abs(diffSeconds) > Math.abs(prov.timeOffsetSeconds ?? Infinity)
+      ) {
+        prov.timeOffsetSeconds = diffSeconds;
       }
+
       log.debug("minExpectedTimeInThePast", {
         diffSeconds,
-        timeOffsetSeconds,
+        timeOffsetSeconds: prov.timeOffsetSeconds,
       });
     })
     .catch((err) => {
-      fetchError = err;
+      prov.fetchError = err;
       log.error("updateDepartures failed", err);
     });
+};
 
-const render = () => {
-  if (fetchError) throw Error(fetchError.message);
+const render = (provider: Provider) => {
+  const prov = p(provider);
+  if (prov.fetchError) throw Error(prov.fetchError.message);
 
-  const decoratedDepartures = decorateDepartures(lastDeparturesRaw);
+  const decoratedDepartures = decorateDepartures(prov.lastDeparturesRaw);
 
   const departuresByDirection = decoratedDepartures.reduce((map, dep) => {
-    const key = dep.direction ?? providers[chosenProvider].direction;
+    const key = dep.direction ?? prov.direction;
     if (map.has(key)) map.get(key)!.push(dep);
     else map.set(key, [dep]);
     return map;
@@ -155,7 +161,7 @@ const render = () => {
     if (!departures.length) {
       return [`(none for  ${TIME_WINDOW_MINUTES} minutes)`];
     }
-    const realisticDepartures = departures; //.filter((d) => d.canMakeIt);
+    const realisticDepartures = departures;
 
     // format line strings
     const lines = realisticDepartures.map((departure) => {
@@ -182,13 +188,13 @@ const render = () => {
     return lines;
   };
 
-  const mainDirectionDepartures = departuresByDirection.get(mainDirection());
+  const mainDirectionDepartures = departuresByDirection.get(prov.direction);
   log.info("mainDirectionDepartures", mainDirectionDepartures);
 
   const topLevelLines = renderDirection(mainDirectionDepartures ?? []);
 
   const otherDirectionKeys = Array.from(departuresByDirection.keys()).filter(
-    (k) => k !== mainDirection()
+    (k) => k !== prov.direction
   );
   const otherDirections = otherDirectionKeys.flatMap((k) =>
     renderDirection(departuresByDirection.get(k) ?? [])
@@ -207,56 +213,48 @@ const render = () => {
 };
 
 const doUpdate = () => {
-  void updateDepartures().catch((err) =>
-    log.error({ err }, "updateDepartures failed")
-  );
+  Object.keys(providers).forEach((providerName) => {
+    void updateDepartures(providerName as Provider).catch((err) =>
+      log.error({ err }, "updateDepartures failed")
+    );
+  });
 };
 
 if (FETCH_INTERVAL_MS && typeof FETCH_INTERVAL_MS === "number") {
   setInterval(doUpdate, FETCH_INTERVAL_MS);
 }
-
 doUpdate();
 
-const getServerVersion = () => startTime.valueOf().toString();
-
-// @ts-ignore
-const checkVersionMiddleware = (req, res, next) => {
-  const clientsServerVersion = req.headers["x-server-version"];
-  if (!clientsServerVersion) {
-    console.log("No x-server-version in client request - welcome!");
-    next();
-    return;
-  }
-
-  const serverVersion = getServerVersion();
-  if (serverVersion !== clientsServerVersion) {
-    console.log("Client vs Server version mismatch - redirecting", {
-      clientsServerVersion,
-      serverVersion,
-    });
-
-    res.set("location", "/");
-    res.status(302).send();
-    return;
-  }
-  next();
-};
-
 const app = new Elysia()
-  .get("/", ({ set, headers }) => {
-    log.info("GET /", headers["user-agent"]);
-    if (fetchError) {
-      throw fetchError;
+  .get("/", ({ redirect }) => {
+    return redirect(`/${defaultProvider}`, 303);
+  })
+
+  .get("/content", ({ redirect }) => {
+    return redirect(`/${defaultProvider}/content`, 303);
+  })
+
+  .get("/:provider", ({ params: { provider: providerStr }, set, headers }) => {
+    const provider = providerStr.toUpperCase() as Provider;
+    const prov = p(provider);
+    log.info("GET /:provider", { provider }, headers["user-agent"]);
+    if (prov.fetchError) {
+      throw prov.fetchError;
     }
     set.headers["content-type"] = "text/html";
-    return getIndex(render());
+    return getIndex(provider, render(provider));
   })
-  .get("/content", ({ headers, set }) => {
-    log.info("GET /content", headers["user-agent"]);
-    set.headers["content-type"] = "text/html";
-    return render();
-  })
+
+  .get(
+    "/:provider/content",
+    ({ params: { provider: providerStr }, headers, set }) => {
+      const provider = providerStr.toUpperCase() as Provider;
+      log.info(`GET /:provider/content`, { provider }, headers["user-agent"]);
+      set.headers["content-type"] = "text/html";
+      return render(provider as Provider);
+    }
+  )
+
   .listen(conf.PORT);
 
 console.log(

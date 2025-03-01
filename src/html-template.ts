@@ -33,7 +33,7 @@ const scrollScript = `
   }
 })();`;
 
-const getIndex = (content?: string) => `
+const getIndex = (provider: "SL" | "VT", content?: string) => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -79,7 +79,7 @@ const getIndex = (content?: string) => `
           console.log('Loading contentä');
           const headers = !!knownServerVer ? { ['x-server-version']: knownServerVer } : {}
           
-          const updatePromise = fetch('/content', { headers })
+          const updatePromise = fetch('/${provider}/content', { headers })
             .then(function (response) {
               const { redirected, headers } = response;
               console.log('Got response', { redirected, headers });
