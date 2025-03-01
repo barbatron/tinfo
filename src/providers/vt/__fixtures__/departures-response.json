@@ -1,0 +1,362 @@
+{
+  "results": [
+    {
+      "detailsReference": "eyJUIjpbeyJSIjoiMXwxNDkwNXwwfDgwfDEwMzIwMjUiLCJJIjowfV19",
+      "serviceJourney": {
+        "gid": "9015014500104982",
+        "direction": "Tynnered",
+        "directionDetails": {
+          "fullDirection": "Tynnered",
+          "shortDirection": "Tynnered"
+        },
+        "line": {
+          "gid": "9011014500100000",
+          "name": "Spårvagn 1",
+          "shortName": "1",
+          "designation": "1",
+          "backgroundColor": "#ffffff",
+          "foregroundColor": "#006c93",
+          "borderColor": "#006c93",
+          "transportMode": "tram",
+          "transportSubMode": "none",
+          "isWheelchairAccessible": true
+        }
+      },
+      "stopPoint": {
+        "gid": "9022014004760002",
+        "name": "Marklandsgatan, Göteborg",
+        "platform": "B",
+        "latitude": 57.67445248,
+        "longitude": 11.93554836
+      },
+      "plannedTime": "2025-03-01T15:29:00.0000000+01:00",
+      "estimatedTime": "2025-03-01T15:34:00.0000000+01:00",
+      "estimatedOtherwisePlannedTime": "2025-03-01T15:34:00.0000000+01:00",
+      "isCancelled": false,
+      "isPartCancelled": false
+    },
+    {
+      "detailsReference": "eyJUIjpbeyJSIjoiMXwyNjE3OHwyfDgwfDEwMzIwMjUiLCJJIjowfV19",
+      "serviceJourney": {
+        "gid": "9015014521300661",
+        "direction": "Billdal, Påstigning fram",
+        "directionDetails": {
+          "fullDirection": "Billdal, Påstigning fram",
+          "shortDirection": "Billdal",
+          "isFrontEntry": true
+        },
+        "line": {
+          "gid": "9011014521300000",
+          "name": "Buss X2",
+          "shortName": "X2",
+          "designation": "X2",
+          "backgroundColor": "#ffff50",
+          "foregroundColor": "#d400a2",
+          "borderColor": "#d400a2",
+          "transportMode": "bus",
+          "transportSubMode": "none",
+          "isWheelchairAccessible": true
+        }
+      },
+      "stopPoint": {
+        "gid": "9022014004760004",
+        "name": "Marklandsgatan, Göteborg",
+        "platform": "D",
+        "latitude": 57.67426489,
+        "longitude": 11.93596683
+      },
+      "plannedTime": "2025-03-01T15:33:00.0000000+01:00",
+      "estimatedTime": "2025-03-01T15:34:00.0000000+01:00",
+      "estimatedOtherwisePlannedTime": "2025-03-01T15:34:00.0000000+01:00",
+      "isCancelled": false,
+      "isPartCancelled": false
+    },
+    {
+      "detailsReference": "eyJUIjpbeyJSIjoiMXwxNDg2MnwxNHw4MHwxMDMyMDI1IiwiSSI6MH1dfQ",
+      "serviceJourney": {
+        "gid": "9015014500804976",
+        "direction": "Frölunda",
+        "directionDetails": {
+          "fullDirection": "Frölunda",
+          "shortDirection": "Frölunda"
+        },
+        "line": {
+          "gid": "9011014500800000",
+          "name": "Spårvagn 8",
+          "shortName": "8",
+          "designation": "8",
+          "backgroundColor": "#a5449a",
+          "foregroundColor": "#ffffff",
+          "borderColor": "#ffffff",
+          "transportMode": "tram",
+          "transportSubMode": "none",
+          "isWheelchairAccessible": true
+        }
+      },
+      "stopPoint": {
+        "gid": "9022014004760002",
+        "name": "Marklandsgatan, Göteborg",
+        "platform": "B",
+        "latitude": 57.67445248,
+        "longitude": 11.93554836
+      },
+      "plannedTime": "2025-03-01T15:33:00.0000000+01:00",
+      "estimatedTime": "2025-03-01T15:35:00.0000000+01:00",
+      "estimatedOtherwisePlannedTime": "2025-03-01T15:35:00.0000000+01:00",
+      "isCancelled": false,
+      "isPartCancelled": false
+    },
+    {
+      "detailsReference": "eyJUIjpbeyJSIjoiMXwxNDg5N3wzfDgwfDEwMzIwMjUiLCJJIjowfV19",
+      "serviceJourney": {
+        "gid": "9015014500205075",
+        "direction": "Mölndal",
+        "directionDetails": {
+          "fullDirection": "Mölndal",
+          "shortDirection": "Mölndal"
+        },
+        "line": {
+          "gid": "9011014500200000",
+          "name": "Spårvagn 2",
+          "shortName": "2",
+          "designation": "2",
+          "backgroundColor": "#ffdd00",
+          "foregroundColor": "#006c93",
+          "borderColor": "#ffdd00",
+          "transportMode": "tram",
+          "transportSubMode": "none",
+          "isWheelchairAccessible": true
+        }
+      },
+      "stopPoint": {
+        "gid": "9022014004760001",
+        "name": "Marklandsgatan, Göteborg",
+        "platform": "A",
+        "latitude": 57.67446096,
+        "longitude": 11.93626903
+      },
+      "plannedTime": "2025-03-01T15:35:00.0000000+01:00",
+      "estimatedTime": "2025-03-01T15:35:00.0000000+01:00",
+      "estimatedOtherwisePlannedTime": "2025-03-01T15:35:00.0000000+01:00",
+      "isCancelled": false,
+      "isPartCancelled": false
+    },
+    {
+      "detailsReference": "eyJUIjpbeyJSIjoiMXwxNDg5NnwxfDgwfDEwMzIwMjUiLCJJIjowfV19",
+      "serviceJourney": {
+        "gid": "9015014500704972",
+        "direction": "Tynnered",
+        "directionDetails": {
+          "fullDirection": "Tynnered",
+          "shortDirection": "Tynnered"
+        },
+        "line": {
+          "gid": "9011014500700000",
+          "name": "Spårvagn 7",
+          "shortName": "7",
+          "designation": "7",
+          "backgroundColor": "#764712",
+          "foregroundColor": "#ffffff",
+          "borderColor": "#764712",
+          "transportMode": "tram",
+          "transportSubMode": "none",
+          "isWheelchairAccessible": true
+        }
+      },
+      "stopPoint": {
+        "gid": "9022014004760002",
+        "name": "Marklandsgatan, Göteborg",
+        "platform": "B",
+        "latitude": 57.67445248,
+        "longitude": 11.93554836
+      },
+      "plannedTime": "2025-03-01T15:36:00.0000000+01:00",
+      "estimatedTime": "2025-03-01T15:37:00.0000000+01:00",
+      "estimatedOtherwisePlannedTime": "2025-03-01T15:37:00.0000000+01:00",
+      "isCancelled": false,
+      "isPartCancelled": false
+    },
+    {
+      "detailsReference": "eyJUIjpbeyJSIjoiMXwxNDg3Mnw4fDgwfDEwMzIwMjUiLCJJIjowfV19",
+      "serviceJourney": {
+        "gid": "9015014500305085",
+        "direction": "Kålltorp",
+        "directionDetails": {
+          "fullDirection": "Kålltorp",
+          "shortDirection": "Kålltorp"
+        },
+        "line": {
+          "gid": "9011014500300000",
+          "name": "Spårvagn 3",
+          "shortName": "3",
+          "designation": "3",
+          "backgroundColor": "#0071c1",
+          "foregroundColor": "#ffffff",
+          "borderColor": "#0071c1",
+          "transportMode": "tram",
+          "transportSubMode": "none",
+          "isWheelchairAccessible": false
+        }
+      },
+      "stopPoint": {
+        "gid": "9022014004760002",
+        "name": "Marklandsgatan, Göteborg",
+        "platform": "B",
+        "latitude": 57.67445248,
+        "longitude": 11.93554836
+      },
+      "plannedTime": "2025-03-01T15:37:00.0000000+01:00",
+      "estimatedTime": "2025-03-01T15:37:00.0000000+01:00",
+      "estimatedOtherwisePlannedTime": "2025-03-01T15:37:00.0000000+01:00",
+      "isCancelled": false,
+      "isPartCancelled": false
+    },
+    {
+      "detailsReference": "eyJUIjpbeyJSIjoiMXwxNDg3OXwyfDgwfDEwMzIwMjUiLCJJIjowfV19",
+      "serviceJourney": {
+        "gid": "9015014500705063",
+        "direction": "Bergsjön",
+        "directionDetails": {
+          "fullDirection": "Bergsjön",
+          "shortDirection": "Bergsjön"
+        },
+        "line": {
+          "gid": "9011014500700000",
+          "name": "Spårvagn 7",
+          "shortName": "7",
+          "designation": "7",
+          "backgroundColor": "#764712",
+          "foregroundColor": "#ffffff",
+          "borderColor": "#764712",
+          "transportMode": "tram",
+          "transportSubMode": "none",
+          "isWheelchairAccessible": true
+        }
+      },
+      "stopPoint": {
+        "gid": "9022014004760001",
+        "name": "Marklandsgatan, Göteborg",
+        "platform": "A",
+        "latitude": 57.67446096,
+        "longitude": 11.93626903
+      },
+      "plannedTime": "2025-03-01T15:37:00.0000000+01:00",
+      "estimatedTime": "2025-03-01T15:37:00.0000000+01:00",
+      "estimatedOtherwisePlannedTime": "2025-03-01T15:37:00.0000000+01:00",
+      "isCancelled": false,
+      "isPartCancelled": false
+    },
+    {
+      "detailsReference": "eyJUIjpbeyJSIjoiMXwyNjE3OXwwfDgwfDEwMzIwMjUiLCJJIjowfV19",
+      "serviceJourney": {
+        "gid": "9015014521300664",
+        "direction": "Gerrebacka, Påstigning fram",
+        "directionDetails": {
+          "fullDirection": "Gerrebacka, Påstigning fram",
+          "shortDirection": "Gerrebacka",
+          "isFrontEntry": true
+        },
+        "line": {
+          "gid": "9011014521300000",
+          "name": "Buss X2",
+          "shortName": "X2",
+          "designation": "X2",
+          "backgroundColor": "#ffff50",
+          "foregroundColor": "#d400a2",
+          "borderColor": "#d400a2",
+          "transportMode": "bus",
+          "transportSubMode": "none",
+          "isWheelchairAccessible": true
+        }
+      },
+      "stopPoint": {
+        "gid": "9022014004760007",
+        "name": "Marklandsgatan, Göteborg",
+        "platform": "G",
+        "latitude": 57.67436261,
+        "longitude": 11.93703226
+      },
+      "plannedTime": "2025-03-01T15:34:00.0000000+01:00",
+      "estimatedTime": "2025-03-01T15:39:00.0000000+01:00",
+      "estimatedOtherwisePlannedTime": "2025-03-01T15:39:00.0000000+01:00",
+      "isCancelled": false,
+      "isPartCancelled": false
+    },
+    {
+      "detailsReference": "eyJUIjpbeyJSIjoiMXw0MDYzfDZ8ODB8MTAzMjAyNSIsIkkiOjB9XX0",
+      "serviceJourney": {
+        "gid": "9015014501900668",
+        "direction": "Backa via Polstjärnegatan",
+        "directionDetails": {
+          "fullDirection": "Backa via Polstjärnegatan",
+          "shortDirection": "Backa",
+          "via": "Polstjärnegatan"
+        },
+        "line": {
+          "gid": "9011014501900000",
+          "name": "Buss 19",
+          "shortName": "19",
+          "designation": "19",
+          "backgroundColor": "#e0005b",
+          "foregroundColor": "#ffff50",
+          "borderColor": "#e0005b",
+          "transportMode": "bus",
+          "transportSubMode": "none",
+          "isWheelchairAccessible": true
+        }
+      },
+      "stopPoint": {
+        "gid": "9022014004760012",
+        "name": "Marklandsgatan, Göteborg",
+        "platform": "L",
+        "latitude": 57.67385147,
+        "longitude": 11.93596818
+      },
+      "plannedTime": "2025-03-01T15:39:00.0000000+01:00",
+      "estimatedTime": "2025-03-01T15:39:00.0000000+01:00",
+      "estimatedOtherwisePlannedTime": "2025-03-01T15:39:00.0000000+01:00",
+      "isCancelled": false,
+      "isPartCancelled": false
+    },
+    {
+      "detailsReference": "eyJUIjpbeyJSIjoiMXwxNDkwNXwxfDgwfDEwMzIwMjUiLCJJIjowfV19",
+      "serviceJourney": {
+        "gid": "9015014500105004",
+        "direction": "Tynnered",
+        "directionDetails": {
+          "fullDirection": "Tynnered",
+          "shortDirection": "Tynnered"
+        },
+        "line": {
+          "gid": "9011014500100000",
+          "name": "Spårvagn 1",
+          "shortName": "1",
+          "designation": "1",
+          "backgroundColor": "#ffffff",
+          "foregroundColor": "#006c93",
+          "borderColor": "#006c93",
+          "transportMode": "tram",
+          "transportSubMode": "none",
+          "isWheelchairAccessible": true
+        }
+      },
+      "stopPoint": {
+        "gid": "9022014004760002",
+        "name": "Marklandsgatan, Göteborg",
+        "platform": "B",
+        "latitude": 57.67445248,
+        "longitude": 11.93554836
+      },
+      "plannedTime": "2025-03-01T15:39:00.0000000+01:00",
+      "estimatedTime": "2025-03-01T15:39:00.0000000+01:00",
+      "estimatedOtherwisePlannedTime": "2025-03-01T15:39:00.0000000+01:00",
+      "isCancelled": false,
+      "isPartCancelled": false
+    }
+  ],
+  "pagination": { "limit": 10, "offset": 0, "size": 10 },
+  "links": {
+    "next": "stop-areas/9021014004760000/departures?timeSpanInMinutes=25&offset=10&limit=10",
+    "current": "stop-areas/9021014004760000/departures?timeSpanInMinutes=25"
+  }
+}

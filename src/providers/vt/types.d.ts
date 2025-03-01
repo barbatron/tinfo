@@ -1,13 +1,27 @@
 export declare namespace Vt {
   export declare namespace PlaneraResaApi {
-    export type AppConfig = {
+    /* Auth */
+
+    export type OauthAppConfig = {
       clientId: string;
       clientSecret: string;
-      clientAuthKey: string;
-    };
+    } | { clientAuthKey: string };
 
-    export type Config = {
-      appConfig: AppConfig;
+    export interface OauthResponse {
+      access_token: string;
+      scope: string;
+      token_type: string;
+      expires_in: number;
+    }
+
+    export interface OauthClient {
+      getToken(): Promise<OauthResponse>;
+    }
+
+    /* Client */
+
+    export type ClientConfig = {
+      authClient: OauthClient;
       stopAreaGid: string;
       timeWindowMinutes: number;
       direction?: string;
