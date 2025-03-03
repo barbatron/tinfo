@@ -1,13 +1,13 @@
 import { log } from "../../log";
+import {
+  StopAreasApi,
+  StopAreasGetRequest,
+  VTApiPlaneraResaWebV4ModelsStopAreasStopAreaApiModel,
+} from "./client";
 import { Vt } from "./types";
 
 type Config = {
-  apiUrl: string;
-};
-
-const defaultConfig: Config = {
-  apiUrl:
-    "https://ext-api.vasttrafik.se/pr/v4/locations/by-text?q={name}&types=stoparea&limit=10&offset=0&bodSearch=false",
+  api: StopAreasApi;
 };
 
 type Result = { gid: string };
@@ -15,40 +15,24 @@ type Result = { gid: string };
 export class VtPlaneraResaStopAreaClient
   implements Vt.PlaneraResaApi.StopAreaClient
 {
-  private readonly conf: { apiUrl: string };
-  private readonly cache = new Map<string, Vt.PlaneraResaApi.Location>();
+  private readonly cache = new Map<string, Result>();
 
-  public constructor(conf?: Partial<Config>) {
-    this.conf = { ...defaultConfig, ...conf };
-  }
+  public constructor(private readonly conf: Config) {}
 
   private async lookupRemote(
     name: string
-  ): Promise<Vt.PlaneraResaApi.Location> {
-    const response = await fetch(this.conf.apiUrl.replace("{name}", name));
-    if (!response.ok)
-      throw Error(
-        "Request failed: " +
-          response.statusText +
-          "\n" +
-          JSON.stringify(
-            { url: response.url, responseHeaders: response.headers },
-            null,
-            2
-          )
-      );
-    const data = (await response.json()) as Vt.PlaneraResaApi.LocationResponse;
-    log.trace("[vt stoparea] Response", data);
+  ): Promise<VTApiPlaneraResaWebV4ModelsStopAreasStopAreaApiModel> {
+    const results = await this.conf.api.stopAreasGet();
+    log.trace("[vt stoparea] Response");
 
-    const { results } = data;
-
-    const exactMatch = results.find((location) => location.name === name);
+    const exactMatch = results.find((stopArea) => stopArea.name === name);
     if (exactMatch) {
       return exactMatch;
     }
 
-    const matcher = (location: Vt.PlaneraResaApi.Location) =>
-      location.name.startsWith(name);
+    const matcher = (
+      stopArea: VTApiPlaneraResaWebV4ModelsStopAreasStopAreaApiModel
+    ) => stopArea.name?.startsWith(name);
     const matches = results.filter(matcher);
     if (matches.length === 0) {
       throw Error(`No site found for ${name}`);
@@ -56,7 +40,9 @@ export class VtPlaneraResaStopAreaClient
     if (matches.length > 1) {
       log.warn("Multiple sites found for", name, matches);
     }
-
+    if (!matches[0].gid) {
+      throw Error(`No gid found for ${name}`);
+    }
     return matches[0];
   }
 
@@ -72,8 +58,9 @@ export class VtPlaneraResaStopAreaClient
     }
 
     log.debug("[vt stoparea] Cache miss", name);
-    const location = await this.lookupRemote(name);
-    this.cache.set(name, location);
-    return { gid: location.gid };
+    const stopArea = await this.lookupRemote(name);
+    const result = { gid: stopArea.gid! };
+    this.cache.set(name, result);
+    return result;
   }
 }

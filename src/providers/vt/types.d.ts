@@ -59,13 +59,5 @@ export declare namespace Vt {
     export interface StopAreaClient {
       lookup(name: string): Promise<{ gid: string }>;
     }
-
-    export type ClientConfig = {
-      stopAreaClient: StopAreaClient;
-      authClient: OauthClient;
-      stopAreaGid: string;
-      timeWindowMinutes: number;
-      direction?: string;
-    };
   }
 }
