@@ -50,6 +50,7 @@ export class VtPlaneraResaApiClient implements DepartureClient {
       stopAreaGid,
       timeSpanInMinutes: this.conf.timeWindowMinutes,
     };
+
     log.debug("[vt] Requesting departures", req);
     const response: VTApiPlaneraResaWebV4ModelsDeparturesAndArrivalsGetDeparturesResponse =
       await this.stopAreasClient.stopAreasStopAreaGidDeparturesGet(req);
