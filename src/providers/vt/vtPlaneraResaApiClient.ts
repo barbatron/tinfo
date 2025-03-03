@@ -1,5 +1,5 @@
 import { log } from "../../log";
-import { Departure } from "../../types";
+import { Departure, FetchParams } from "../../types";
 import { DepartureClient } from "../types";
 import {
   Configuration,
@@ -41,9 +41,13 @@ export class VtPlaneraResaApiClient implements DepartureClient {
     this.stopAreasClient = createStopAreasApi(conf);
   }
 
-  public async fetch(): Promise<Departure[]> {
+  public async fetch(params?: Partial<FetchParams>): Promise<Departure[]> {
+    const locationString = params?.stop_id ?? this.conf.stopAreaGid;
+    const { gid: stopAreaGid } = await this.conf.stopAreaClient.lookup(
+      locationString
+    );
     const req: StopAreasStopAreaGidDeparturesGetRequest = {
-      stopAreaGid: this.conf.stopAreaGid,
+      stopAreaGid,
       timeSpanInMinutes: this.conf.timeWindowMinutes,
     };
     log.debug("[vt] Requesting departures", req);
@@ -64,7 +68,7 @@ export class VtPlaneraResaApiClient implements DepartureClient {
       )
       .map((r) => {
         if (!r.serviceJourney?.line) {
-          throw Error("We filtered this - catch up, typescript");
+          throw Error("No line in response");
         }
         return {
           expectedTime: new Date(

@@ -56,9 +56,12 @@ export declare namespace Vt {
     }
 
     /* Client */
+    export interface StopAreaClient {
+      lookup(name: string): Promise<{ gid: string }>;
+    }
 
     export type ClientConfig = {
-      stopAreaClient: VtStopAreaClient;
+      stopAreaClient: StopAreaClient;
       authClient: OauthClient;
       stopAreaGid: string;
       timeWindowMinutes: number;

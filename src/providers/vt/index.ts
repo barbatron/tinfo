@@ -3,7 +3,7 @@ import { DepartureClient } from "../types";
 import { Vt } from "./types";
 import { VtAuthClient } from "./vtAuthClient";
 import { VtPlaneraResaApiClient } from "./vtPlaneraResaApiClient";
-import { VtStopAreaClient } from "./vtStopAreaClient";
+import { VtPlaneraResaStopAreaClient } from "./vtPlaneraResaStopAreaClient";
 
 const deviceId = `device_jold_${Date.now()}`;
 
@@ -14,7 +14,7 @@ export function createVtClient(config: Config): DepartureClient {
     clientAuthKey: config.getString("VT_CLIENT_AUTH_KEY", true)!,
   };
   const authClient = new VtAuthClient({ oauthAppConfig, scope: deviceId });
-  const stopAreaClient = new VtStopAreaClient();
+  const stopAreaClient = new VtPlaneraResaStopAreaClient();
   const vtConfig: Vt.PlaneraResaApi.ClientConfig = {
     authClient,
     stopAreaClient,
