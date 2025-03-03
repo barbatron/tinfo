@@ -2,10 +2,12 @@ export declare namespace Vt {
   export declare namespace PlaneraResaApi {
     /* Auth */
 
-    export type OauthAppConfig = {
-      clientId: string;
-      clientSecret: string;
-    } | { clientAuthKey: string };
+    export type OauthAppConfig =
+      | {
+          clientId: string;
+          clientSecret: string;
+        }
+      | { clientAuthKey: string };
 
     export interface OauthResponse {
       access_token: string;
@@ -18,9 +20,45 @@ export declare namespace Vt {
       getToken(): Promise<OauthResponse>;
     }
 
+    /* StopArea */
+    export interface Location {
+      gid: string;
+      name: string;
+      locationType: string;
+      latitude: number;
+      longitude: number;
+      platform: string;
+      straightLineDistanceInMeters: number;
+      hasLocalService: true;
+    }
+
+    export interface LocationResponse {
+      results: Location[];
+      pagination: {
+        limit: number;
+        offset: number;
+        size: number;
+      };
+      links: {
+        previous: string;
+        next: string;
+        current: string;
+      };
+    }
+
+    export interface StopArea {
+      id: string;
+      name: string;
+      type: string;
+      lon: number;
+      lat: number;
+      idx: number;
+    }
+
     /* Client */
 
     export type ClientConfig = {
+      stopAreaClient: VtStopAreaClient;
       authClient: OauthClient;
       stopAreaGid: string;
       timeWindowMinutes: number;

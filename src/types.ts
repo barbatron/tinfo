@@ -18,4 +18,5 @@ export type FetchParams = Readonly<{
   stop_id: string;
   dir: string;
   mot: string;
+  min_min: string;
 }>;

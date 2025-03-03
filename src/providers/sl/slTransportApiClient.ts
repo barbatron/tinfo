@@ -3,21 +3,24 @@ import { log } from "../../log.js";
 import { Departure, FetchParams } from "../../types.js";
 import { Sl } from "./types.js";
 import { DepartureClient } from "../types.js";
-import { getConfig } from "../../config.js";
+import { SlTransportSiteClient } from "./slTransportSiteClient.js";
+
+type Config = {
+  apiUrl: string;
+  siteId: string;
+  timeWindowMinutes: number;
+  siteClient: SlTransportSiteClient;
+};
 
 export class SlTransportApiClient implements DepartureClient {
-  public constructor(
-    private readonly conf: {
-      apiUrl: string;
-      siteId: string;
-      timeWindowMinutes: number;
-    }
-  ) {
+  public constructor(private readonly conf: Config) {
     console.log(SlTransportApiClient.name, this.conf);
   }
 
   public async fetch(params?: Partial<FetchParams>): Promise<Departure[]> {
-    const siteId = params?.stop_id ?? this.conf.siteId;
+    const siteIdString = params?.stop_id ?? this.conf.siteId;
+    const { id: siteId } = await this.conf.siteClient.lookup(siteIdString);
+
     const url = new URL(this.conf.apiUrl.replace("{siteId}", siteId));
 
     const response = await fetch(url);

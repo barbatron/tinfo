@@ -10,6 +10,7 @@ import {
   DEST_BLOCK_MARGIN_BOT,
   DEST_NAME_OPACITY,
   FETCH_INTERVAL_MS,
+  MIN_TIME_MINUTES,
   PAGE_INFO,
   RUSH_SECONDS_GAINED,
   // Esthetic
@@ -113,9 +114,15 @@ const updateDepartures = async (
     const departures = allDepartures
       // Filter out non-metro departures
       .filter((d) => d.mot === (params?.mot ?? prov.preferredMot))
+      // Filter out departures that are too near in the future
+      .filter(
+        (d) =>
+          dayjs(d.expected).diff(now, "minutes") >=
+          Number(params?.min_min ?? MIN_TIME_MINUTES)
+      )
       // Filter out departures that are too far in the future
       .filter(
-        (d_1) => dayjs(d_1.expected).diff(now, "minutes") <= TIME_WINDOW_MINUTES
+        (d) => dayjs(d.expected).diff(now, "minutes") <= TIME_WINDOW_MINUTES
       );
     if (!params) {
       prov.lastDeparturesRaw = [...departures];

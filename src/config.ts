@@ -10,20 +10,23 @@ export interface Config {
   getNumber: ConfigAccessor<number, boolean>;
 }
 
-const PORT = process.env.PORT ? Number(process.env.PORT) : 8000;
+const env = Bun.env;
 
-const TIME_WINDOW_MINUTES: number = !!process.env.TIME_WINDOW_MINUTES
-  ? Number(process.env.TIME_WINDOW_MINUTES)
+const PORT = env.PORT ? Number(env.PORT) : 8000;
+
+const TIME_WINDOW_MINUTES: number = !!env.TIME_WINDOW_MINUTES
+  ? Number(env.TIME_WINDOW_MINUTES)
   : 20;
-const FETCH_INTERVAL_MS = !!process.env.FETCH_INTERVAL_MS
-  ? Number(process.env.FETCH_INTERVAL_MS)
+const FETCH_INTERVAL_MS = !!env.FETCH_INTERVAL_MS
+  ? Number(env.FETCH_INTERVAL_MS)
   : 15000;
-const REFRESH_INTERVAL_MS = !!process.env.REFRESH_INTERVAL_MS
-  ? Number(process.env.REFRESH_INTERVAL_MS)
+const REFRESH_INTERVAL_MS = !!env.REFRESH_INTERVAL_MS
+  ? Number(env.REFRESH_INTERVAL_MS)
   : 5000;
 
-const WALK_TIME_SECONDS = Number(process.env.WALK_TIME_SECONDS || 300);
-const RUSH_SECONDS_GAINED = Number(process.env.RUSH_SECONDS_GAINED || 90);
+const WALK_TIME_SECONDS = Number(env.WALK_TIME_SECONDS || 300);
+const RUSH_SECONDS_GAINED = Number(env.RUSH_SECONDS_GAINED || 90);
+const MIN_TIME_MINUTES = Number(env.MIN_TIME_MINUTES || 5);
 
 const STATION_NAME_REPLACEMENTS = new Map([
   ["Hässelby strand", "Hässelby str"],
@@ -41,11 +44,10 @@ log.info(
     REFRESH_INTERVAL_MS,
     WALK_TIME_SECONDS,
     RUSH_SECONDS_GAINED,
+    MIN_TIME_MINUTES,
   },
   "CONFIG"
 );
-
-const env = Bun.env;
 
 export const fromEnv: Config = {
   getString: function <T extends boolean>(key: string, required?: T) {
@@ -93,4 +95,5 @@ export {
   STATION_NAME_REPLACEMENTS,
   TIME_WINDOW_MINUTES,
   WALK_TIME_SECONDS,
+  MIN_TIME_MINUTES,
 };
