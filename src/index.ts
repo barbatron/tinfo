@@ -42,9 +42,11 @@ const providers: Record<
     timeOffsetSeconds?: number;
     lastDeparturesRaw?: Departure[];
     fetchError?: Error | unknown;
+    autoUpdate?: boolean;
   }
 > = {
   SL: {
+    autoUpdate: true,
     client: createSlTransportApiClient(config),
     direction: config.getString("SL_JOURNEY_DIRECTION", false) ?? "1",
     stopName: "Hökis",
@@ -244,11 +246,13 @@ const render = async (provider: Provider, params?: Partial<FetchParams>) => {
 };
 
 const doUpdate = () => {
-  Object.keys(providers).forEach((providerName) => {
-    void updateDepartures(providerName as Provider).catch((err) =>
-      log.error({ err }, "updateDepartures failed")
-    );
-  });
+  Object.entries(providers)
+    .filter(([, provider]) => provider.autoUpdate)
+    .forEach(([providerName]) => {
+      void updateDepartures(providerName as Provider).catch((err) =>
+        log.error({ err }, "updateDepartures failed")
+      );
+    });
 };
 
 if (FETCH_INTERVAL_MS && typeof FETCH_INTERVAL_MS === "number") {
