@@ -20,7 +20,7 @@ your browser to see the result.
 ### Build
 
 ```sh
-$ bun docker:build
+$ bun run docker:build
 ```
 
 ### Start
