@@ -7,6 +7,7 @@ import dayjs from "dayjs"
 import "./init-dayjs.ts"
 
 import {
+  DEBUG,
   DEST_BLOCK_MARGIN_BOT,
   DEST_NAME_OPACITY,
   FETCH_INTERVAL_MS,
@@ -228,13 +229,15 @@ const updateDepartures = async (
       prov.lastDeparturesRaw = [...departures]
       prov.fetchError = undefined
     }
-    const loggedDepartures = !!conf.getConfig("DEBUG", false)
-      ? departures.map((d) => ({
-          expTime: d.expectedTime,
-          dir: d.direction,
-          mot: d.mot,
-        }))
-      : "(not debug)"
+    const loggedDepartures = departures.map((d) =>
+      DEBUG
+        ? {
+            expTime: d.expectedTime,
+            dir: d.direction,
+            mot: d.mot,
+          }
+        : d.expectedTime
+    )
     log.info(`Updated departures for ${providerName} (#)`, {
       now: new Date().toISOString(),
       params,
@@ -317,7 +320,7 @@ const render = async (provider: Provider, params?: Partial<FetchParams>) => {
 
   const mainDir = params?.dir ?? prov.direction ?? "-"
   const mainDirectionDepartures = departuresByDirection.get(mainDir)
-  log.info("mainDirectionDepartures", mainDirectionDepartures)
+  log.debug("mainDirectionDepartures", mainDirectionDepartures)
 
   const topLevelLines = renderDirection(mainDirectionDepartures ?? [])
 

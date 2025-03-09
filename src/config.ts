@@ -35,6 +35,9 @@ const DEST_FONT_SIZE = "45pt"
 const DEST_NAME_OPACITY = "0.25"
 const DEST_BLOCK_MARGIN_BOT = "2.5rem"
 
+export const DEBUG = env.DEBUG
+export const TRACE = env.TRACE
+
 log.info(
   {
     PORT,
