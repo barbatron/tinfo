@@ -42,8 +42,8 @@ export class SlTransportSiteClient {
 
     const data = (await response.json()) as Sl.TransportApi.SitesResponse;
     const nameLower = name.toLowerCase();
-    const exactMatch = data.find((site) =>
-      site.name.toLowerCase() === nameLower
+    const exactMatch = data.find(
+      (site) => site.name.toLowerCase() === nameLower,
     );
     if (exactMatch) {
       return exactMatch;

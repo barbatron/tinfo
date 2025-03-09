@@ -20,7 +20,7 @@ export class VtPlaneraResaStopAreaClient
   public constructor(private readonly conf: Config) {}
 
   private async lookupRemote(
-    name: string
+    name: string,
   ): Promise<VTApiPlaneraResaWebV4ModelsStopAreasStopAreaApiModel> {
     const results = await this.conf.api.stopAreasGet();
     log.trace("[vt stoparea] Response");
@@ -31,7 +31,7 @@ export class VtPlaneraResaStopAreaClient
     }
 
     const matcher = (
-      stopArea: VTApiPlaneraResaWebV4ModelsStopAreasStopAreaApiModel
+      stopArea: VTApiPlaneraResaWebV4ModelsStopAreasStopAreaApiModel,
     ) => stopArea.name?.startsWith(name);
     const matches = results.filter(matcher);
     if (matches.length === 0) {

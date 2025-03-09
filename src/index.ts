@@ -33,7 +33,7 @@ const autoUpdateSl = !!config.getString("SL_SITE_ID", false);
 type Provider = "SL" | "VT";
 const providers: Record<
   Provider,
-  & {
+  {
     client: DepartureClient;
     direction: string;
     stopName: string;
@@ -42,13 +42,12 @@ const providers: Record<
     lastDeparturesRaw?: Departure[];
     fetchError?: Error | unknown;
     autoUpdate: boolean;
-  }
-  & (
+  } & (
     | { autoUpdate: false }
     | {
-      autoUpdate: true;
-      autoUpdateParams: FetchParams;
-    }
+        autoUpdate: true;
+        autoUpdateParams: FetchParams;
+      }
   )
 > = {
   SL: {
@@ -60,15 +59,15 @@ const providers: Record<
     autoUpdate: autoUpdateSl,
     ...(autoUpdateSl
       ? {
-        // autoUpdate: true,
-        autoUpdateParams: {
-          stop_id: config.getString("SL_SITE_ID", autoUpdateSl)!,
-          dir: config.getString("SL_JOURNEY_DIRECTION", false) || "1",
-          mot: "METRO",
-          min_min: 2,
-          max_min: 30,
-        },
-      }
+          // autoUpdate: true,
+          autoUpdateParams: {
+            stop_id: config.getString("SL_SITE_ID", autoUpdateSl)!,
+            dir: config.getString("SL_JOURNEY_DIRECTION", false) || "1",
+            mot: "METRO",
+            min_min: 2,
+            max_min: 30,
+          },
+        }
       : { autoUpdate: false }),
   },
   VT: {
@@ -153,9 +152,7 @@ const decorateDeparture = (d: Departure): DepartureExt => {
 const isCompleteParams = (params: unknown): params is FetchParams => {
   if (typeof params !== "object" || !params) return false;
   const p = params as FetchParams;
-  return (
-    typeof p.stop_id === "string"
-  );
+  return typeof p.stop_id === "string";
 };
 
 /////////////////////////////
@@ -202,15 +199,14 @@ const updateDepartures = async (
       // Filter out departures that are too near in the future
       .filter(
         (d: Departure) =>
-          dayjs(d.expectedTime).diff(now, "minutes") >=
-            minTimeUntilDeparture,
+          dayjs(d.expectedTime).diff(now, "minutes") >= minTimeUntilDeparture,
       )
       // Filter out departures that are too far in the future
       .filter(
         (d: Departure) =>
-          dayjs(d.expectedTime).diff(now, "minutes") <=
-            maxTimeUntilDeparture,
-      ).toSorted((a, b) => a.expectedTime.valueOf() - b.expectedTime.valueOf())
+          dayjs(d.expectedTime).diff(now, "minutes") <= maxTimeUntilDeparture,
+      )
+      .toSorted((a, b) => a.expectedTime.valueOf() - b.expectedTime.valueOf())
       .slice(0, params?.limit ?? 10);
     log.trace(`[updateDepartures] allDepartures post-filter`, {
       providerName,
@@ -233,20 +229,17 @@ const updateDepartures = async (
     }
     const loggedDepartures = !!conf.getConfig("DEBUG", false)
       ? departures.map((d) => ({
-        expTime: d.expectedTime,
-        dir: d.direction,
-        mot: d.mot,
-      }))
+          expTime: d.expectedTime,
+          dir: d.direction,
+          mot: d.mot,
+        }))
       : "(not debug)";
-    log.info(
-      `Updated departures for ${providerName} (#)`,
-      {
-        now: new Date().toISOString(),
-        params,
-        count: departures.length,
-        departures: loggedDepartures,
-      },
-    );
+    log.info(`Updated departures for ${providerName} (#)`, {
+      now: new Date().toISOString(),
+      params,
+      count: departures.length,
+      departures: loggedDepartures,
+    });
 
     // Misc clamping experiments if expected time of departure is in the past
     const minExpectedTimeInThePast = departures.reduce((min, m_1) => {
@@ -272,9 +265,8 @@ const updateDepartures = async (
 
 const render = async (provider: Provider, params?: Partial<FetchParams>) => {
   const prov = p(provider);
-  const parms = params && Object.values(params).some((v) => !!v)
-    ? params
-    : undefined;
+  const parms =
+    params && Object.values(params).some((v) => !!v) ? params : undefined;
   console.log("fetch", provider, parms);
   const departures = await updateDepartures(provider, parms);
   if (prov.fetchError) throw Error("Fetch error", { cause: prov.fetchError });
@@ -300,9 +292,12 @@ const render = async (provider: Provider, params?: Partial<FetchParams>) => {
     // format line strings
     const lines = realisticDepartures.map((departure) => {
       const expectedTime = clampTime(departure.expectedTime);
-      const hurryStr = departure.successProbPow < 1
-        ? departure.successProb < 0 ? "😵" : "😱"
-        : "✨";
+      const hurryStr =
+        departure.successProbPow < 1
+          ? departure.successProb < 0
+            ? "😵"
+            : "😱"
+          : "✨";
 
       let timeLeft = "";
       if (departure.displayTime) timeLeft = departure.displayTime;
@@ -311,7 +306,8 @@ const render = async (provider: Provider, params?: Partial<FetchParams>) => {
         timeLeft = timeLeftMinutes < 1 ? "<1 min" : `${timeLeftMinutes} min`;
       }
 
-      const destStr = STATION_NAME_REPLACEMENTS.get(departure.destination) ??
+      const destStr =
+        STATION_NAME_REPLACEMENTS.get(departure.destination) ??
         departure.destination;
       return `${hurryStr} ${timeLeft} <span style="opacity: ${DEST_NAME_OPACITY}">${destStr}</span>`;
     });
@@ -328,7 +324,7 @@ const render = async (provider: Provider, params?: Partial<FetchParams>) => {
     (k) => k !== mainDir,
   );
   const otherDirections = otherDirectionKeys.flatMap((k) =>
-    renderDirection(departuresByDirection.get(k) ?? [])
+    renderDirection(departuresByDirection.get(k) ?? []),
   );
 
   const topLevelLinesHtml =
@@ -349,8 +345,8 @@ const autoUpdate = () => {
       .filter(([, provider]) => provider.autoUpdate)
       .map(async ([providerName]) =>
         updateDepartures(providerName as Provider).catch((err) =>
-          log.error({ err }, "updateDepartures failed")
-        )
+          log.error({ err }, "updateDepartures failed"),
+        ),
       ),
   ).finally(() => {
     // Schedule next update

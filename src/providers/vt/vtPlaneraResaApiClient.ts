@@ -24,9 +24,8 @@ export class VtPlaneraResaApiClient implements DepartureClient {
     };
 
     log.debug("[vt] Requesting departures", req);
-    const response:
-      VTApiPlaneraResaWebV4ModelsDeparturesAndArrivalsGetDeparturesResponse =
-        await this.conf.api.stopAreasStopAreaGidDeparturesGet(req);
+    const response: VTApiPlaneraResaWebV4ModelsDeparturesAndArrivalsGetDeparturesResponse =
+      await this.conf.api.stopAreasStopAreaGidDeparturesGet(req);
     if (!response.results) {
       throw Error(
         `No results in response:\n${JSON.stringify(response, null, 2)}`,

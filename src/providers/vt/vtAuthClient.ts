@@ -12,19 +12,18 @@ export class VtAuthClient implements Vt.PlaneraResaApi.OauthClient {
   private latestAuth?: Vt.PlaneraResaApi.OauthResponse;
   private refreshTokenTimeout?: NodeJS.Timer;
 
-  public constructor(
-    private readonly conf: Readonly<AuthClientConf>,
-  ) {}
+  public constructor(private readonly conf: Readonly<AuthClientConf>) {}
 
   public async getToken(): Promise<Vt.PlaneraResaApi.OauthResponse> {
     if (this.latestAuth) {
       return this.latestAuth;
     }
-    const basicAuthB64 = "clientAuthKey" in this.conf.oauthAppConfig
-      ? this.conf.oauthAppConfig.clientAuthKey
-      : btoa(
-        `${this.conf.oauthAppConfig.clientId}:${this.conf.oauthAppConfig.clientSecret}`,
-      );
+    const basicAuthB64 =
+      "clientAuthKey" in this.conf.oauthAppConfig
+        ? this.conf.oauthAppConfig.clientAuthKey
+        : btoa(
+            `${this.conf.oauthAppConfig.clientId}:${this.conf.oauthAppConfig.clientSecret}`,
+          );
 
     const response = await fetch(TOKEN_URL, {
       method: "POST",
@@ -41,8 +40,8 @@ export class VtAuthClient implements Vt.PlaneraResaApi.OauthClient {
       throw new Error(`Failed to fetch token: ${response.statusText}`);
     }
 
-    const authResponse = await response
-      .json() as Vt.PlaneraResaApi.OauthResponse;
+    const authResponse =
+      (await response.json()) as Vt.PlaneraResaApi.OauthResponse;
 
     this.latestAuth = authResponse;
 
