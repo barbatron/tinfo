@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import getIndex from "./html-template";
+import getIndex, { getHelp } from "./html-template";
 import { log } from "./log";
 
 import dayjs from "dayjs";
@@ -370,44 +370,7 @@ const app = new Elysia()
   .get("/help", ({ request, set }) => {
     log.info("GET /help", { defaultProvider });
     set.headers["content-type"] = "text/html";
-    return `
-    <html>
-    <head>  
-    <style>
-    body {
-      font-family: sans-serif;
-      font-size: 1.2rem;
-    }
-    h1 {
-      font-size: 1.5rem;
-    }
-    ul {
-      list-style-type: none;
-      padding: 0 0 0 2rem;
-    }
-    li {
-      margin-bottom: 1rem;
-    }
-    pre { display: inline; }
-    </style>
-    </head>
-    <body>
-    <h1>USAGE</h1>
-    <pre>${
-      new URL(request.url).origin
-    }/{provider}?stop_id=1234&mot=metro&dir=1&min_min=2&max_min=30</pre>
-    <ul>
-    <li><pre>provider</pre>: SL or VT</li>
-    <li><pre>stop_id</pre>: SL site ID or VT stop area GID</li>
-    <li><pre>dir</pre>: (optional) emphasize a direction (provider-specific)</li>
-    <li><pre>mot</pre>: (optional) filter to a mode of transport (provider-specific)</li>
-    <li><pre>min_min</pre>: (optional) filter to departures at least n minutes away (expected)</li>
-    <li><pre>max_min</pre>: (optional) filter to departures at most n minutes away (expected)</li>
-    <li><pre>limit</pre>: (optional) filter max n results</li>
-    </ul>
-    </body>
-    </html>
-    `;
+    return getHelp(new URL(request.url).origin);
   })
   .get("/healthz", () => {
     log.info("GET /healthz", { defaultProvider });
@@ -423,7 +386,6 @@ const app = new Elysia()
         { providerStr, query, provider },
         headers["user-agent"],
       );
-
       set.headers["content-type"] = "text/html";
       const fetchParams = parseQueryFetchParams(query);
       const content = await render(provider, fetchParams);
