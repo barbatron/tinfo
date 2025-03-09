@@ -51,12 +51,6 @@ log.info(
 export const fromEnv: Config = {
   getString: function <T extends boolean>(key: string, required?: T) {
     const isPresent = key in env && !!env[key]
-    console.debug("fromEnv.getString", {
-      key,
-      isPresent,
-      required,
-      value: env[key],
-    })
     if (required && !isPresent) throw Error("Missing/empty config: " + key)
     const value = env[key] || null
     return value

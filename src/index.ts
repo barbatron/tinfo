@@ -360,20 +360,22 @@ const autoUpdate = () => {
 autoUpdate()
 
 const app = new Elysia()
-  .use(html())
+  .get("/healthz", () => {
+    log.info("GET /healthz", { defaultProvider })
+    return "OK"
+  })
   .get("/", ({ redirect }) => {
     log.info("GET /", { defaultProvider })
     return redirect(`/${defaultProvider}`, 303)
   })
+
+  .use(html())
   .get("/help", ({ request, set }) => {
     log.info("GET /help", { defaultProvider })
     set.headers["content-type"] = "text/html"
     return getHelp(new URL(request.url).origin)
   })
-  .get("/healthz", () => {
-    log.info("GET /healthz", { defaultProvider })
-    return "OK"
-  })
+
   .get(
     "/:provider",
     async ({ query, params: { provider: providerStr }, set, headers }) => {

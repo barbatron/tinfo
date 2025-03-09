@@ -81,7 +81,7 @@ const getIndex = (
 
         function loadContent() {
           console.log('Loading content');
-          const headers = !!knownServerVer ? { ['x-server-version']: knownServerVer } : {}
+          const headers = { accept: 'text/html' };
           const q = new URLSearchParams(window.location.search).toString();
           const updatePromise = fetch('/${p.name}/content?' + q, { headers })
             .then(function (response) {
@@ -90,9 +90,6 @@ const getIndex = (
 
               // Handle redirect
               if (redirected) { window.location.reload(); }
-
-              // Update known server version
-              knownServerVer = headers.get('x-server-version');
 
               // Extract html as text
               return response.text();
