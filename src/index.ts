@@ -10,60 +10,80 @@ import {
   DEST_BLOCK_MARGIN_BOT,
   DEST_NAME_OPACITY,
   FETCH_INTERVAL_MS,
+  // General API
+  MAX_TIME_MINUTES,
   MIN_TIME_MINUTES,
   PAGE_INFO,
   RUSH_SECONDS_GAINED,
   // Esthetic
   STATION_NAME_REPLACEMENTS,
-  // General API
-  TIME_WINDOW_MINUTES,
   // Emoji calcs
   WALK_TIME_SECONDS,
 } from "./config";
 import { createSlTransportApiClient } from "./providers/sl";
-import { Departure, DepartureExt, FetchParams } from "./types";
+import { Departure, DepartureClient, DepartureExt, FetchParams } from "./types";
 
 import * as conf from "./config";
 import { createVtClient } from "./providers/vt";
-import { DepartureClient } from "./providers/types";
 
 const config = conf.fromEnv;
 
-const startTime = new Date();
+const autoUpdateSl = !!config.getString("SL_SITE_ID", false);
 
 type Provider = "SL" | "VT";
 const providers: Record<
   Provider,
-  {
+  & {
     client: DepartureClient;
     direction: string;
     stopName: string;
-    preferredMot: string;
+    preferredMot?: string;
     timeOffsetSeconds?: number;
     lastDeparturesRaw?: Departure[];
     fetchError?: Error | unknown;
-    autoUpdate?: boolean;
+    autoUpdate: boolean;
   }
+  & (
+    | { autoUpdate: false }
+    | {
+      autoUpdate: true;
+      autoUpdateParams: FetchParams;
+    }
+  )
 > = {
   SL: {
-    autoUpdate: true,
+    // autoUpdate: true,
     client: createSlTransportApiClient(config),
     direction: config.getString("SL_JOURNEY_DIRECTION", false) ?? "1",
     stopName: "Hökis",
     preferredMot: conf.SL_PAGE_INFO.preferredMot,
+    autoUpdate: autoUpdateSl,
+    ...(autoUpdateSl
+      ? {
+        // autoUpdate: true,
+        autoUpdateParams: {
+          stop_id: config.getString("SL_SITE_ID", autoUpdateSl)!,
+          dir: config.getString("SL_JOURNEY_DIRECTION", false) || "1",
+          mot: "METRO",
+          min_min: 2,
+          max_min: 30,
+        },
+      }
+      : { autoUpdate: false }),
   },
   VT: {
     client: createVtClient(config),
     direction: "-",
     stopName: "Marklandsgatan",
     preferredMot: conf.VT_PAGE_INFO.preferredMot,
+    autoUpdate: false,
   },
 };
 
 const defaultProvider: Provider = "SL";
 
 function p<T extends Provider | string>(
-  provider: T
+  provider: T,
 ): (typeof providers)[Provider] {
   const k = provider.toUpperCase() as Provider;
   if (!providers[k]) throw Error(`No provider for ${provider}`);
@@ -71,6 +91,33 @@ function p<T extends Provider | string>(
 }
 
 /////////////////////////////
+
+function parseQueryFetchParams(
+  query: Record<string, string | undefined>,
+): FetchParams | undefined {
+  const { stop_id, mot, dir, limit, min_min, max_min } = query ?? {};
+  if (!stop_id) return;
+  return {
+    stop_id,
+    mot: !!mot ? String(mot.trim()) : undefined,
+    dir: !!dir ? String(dir.trim()) : undefined,
+    min_min: numberOr(min_min, 2),
+    max_min: numberOr(max_min, 30),
+    limit: numberOr(limit, 10),
+  };
+}
+
+const numberOr = (v: unknown, def: number) => {
+  if (v === undefined || v === null) return def;
+  if (typeof v === "number") return v;
+  if (typeof v === "string") {
+    const trimmed = v.trim();
+    const n = parseInt(trimmed, 10);
+    if (isNaN(n)) return def;
+    return n;
+  }
+  return def;
+};
 
 const clampTime = (time: Date) => {
   const now = new Date();
@@ -87,7 +134,7 @@ const decorateDeparture = (d: Departure): DepartureExt => {
     expectedInSeconds: dayjs(d.expectedTime).diff(new Date(), "seconds"),
     scheduleDriftSeconds: dayjs(d.expectedTime).diff(
       d.scheduledTime,
-      "seconds"
+      "seconds",
     ),
   };
   const d2 = {
@@ -103,48 +150,102 @@ const decorateDeparture = (d: Departure): DepartureExt => {
   return d3;
 };
 
+const isCompleteParams = (params: unknown): params is FetchParams => {
+  if (typeof params !== "object" || !params) return false;
+  const p = params as FetchParams;
+  return (
+    typeof p.stop_id === "string"
+  );
+};
+
 /////////////////////////////
 
 const updateDepartures = async (
   providerName: Provider,
-  params?: Partial<FetchParams>
+  params?: Partial<FetchParams>,
 ) => {
   const prov = p(providerName);
   const now = dayjs();
   try {
-    const allDepartures = await prov.client.fetch(params);
+    const fp = {
+      ...(prov.autoUpdate === true ? prov.autoUpdateParams : {}),
+      ...params,
+    };
+    if (!isCompleteParams(fp)) {
+      log.warn("[updateDepartures] Update without params", {
+        providerName,
+        params,
+        prov,
+      });
+      return [];
+    }
+    const allDepartures = await prov.client.fetch(fp);
+    const preferredMot = params?.mot ?? prov.preferredMot;
+    const minTimeUntilDeparture = numberOr(params?.min_min, MIN_TIME_MINUTES);
+    const maxTimeUntilDeparture = numberOr(params?.max_min, Infinity);
+    log.trace(`[updateDepartures] allDepartures pre-filter`, {
+      providerName,
+      preferredMot,
+      minTimeUntilDeparture,
+      maxTimeUntilDeparture,
+      prov,
+      params,
+      departures: allDepartures.map((d) => ({
+        expTime: d.expectedTime,
+        dir: d.direction,
+        mot: d.mot,
+      })),
+    });
     const departures = allDepartures
       // Filter out non-metro departures
-      .filter((d) => d.mot === (params?.mot ?? prov.preferredMot))
+      .filter((d) => !preferredMot || d.mot === preferredMot)
       // Filter out departures that are too near in the future
       .filter(
-        (d) =>
-          dayjs(d.expected).diff(now, "minutes") >=
-          Number(params?.min_min ?? MIN_TIME_MINUTES)
+        (d: Departure) =>
+          dayjs(d.expectedTime).diff(now, "minutes") >=
+            minTimeUntilDeparture,
       )
       // Filter out departures that are too far in the future
       .filter(
-        (d) => dayjs(d.expected).diff(now, "minutes") <= TIME_WINDOW_MINUTES
-      );
+        (d: Departure) =>
+          dayjs(d.expectedTime).diff(now, "minutes") <=
+            maxTimeUntilDeparture,
+      ).toSorted((a, b) => a.expectedTime.valueOf() - b.expectedTime.valueOf())
+      .slice(0, params?.limit ?? 10);
+    log.trace(`[updateDepartures] allDepartures post-filter`, {
+      providerName,
+      preferredMot,
+      minTimeUntilDeparture,
+      maxTimeUntilDeparture,
+      prov,
+      params,
+      departures: departures.map((d) => ({
+        expTime: d.expectedTime,
+        dir: d.direction,
+        mot: d.mot,
+      })),
+    });
+
     if (!params) {
+      // TODO: Remove
       prov.lastDeparturesRaw = [...departures];
       prov.fetchError = undefined;
     }
+    const loggedDepartures = !!conf.getConfig("DEBUG", false)
+      ? departures.map((d) => ({
+        expTime: d.expectedTime,
+        dir: d.direction,
+        mot: d.mot,
+      }))
+      : "(not debug)";
     log.info(
       `Updated departures for ${providerName} (#)`,
-      new Date().toISOString(),
-      params,
-      departures.length
-    );
-    log.debug(
-      "Departures",
-      params,
-      departures.map((m) => ({
-        destination: m.destination,
-        scheduledTime: m.scheduledTime,
-        expectedTime: m.expectedTime,
-        displayTime: m.displayTime,
-      }))
+      {
+        now: new Date().toISOString(),
+        params,
+        count: departures.length,
+        departures: loggedDepartures,
+      },
     );
 
     // Misc clamping experiments if expected time of departure is in the past
@@ -171,8 +272,9 @@ const updateDepartures = async (
 
 const render = async (provider: Provider, params?: Partial<FetchParams>) => {
   const prov = p(provider);
-  const parms =
-    params && Object.values(params).some((v) => !!v) ? params : undefined;
+  const parms = params && Object.values(params).some((v) => !!v)
+    ? params
+    : undefined;
   console.log("fetch", provider, parms);
   const departures = await updateDepartures(provider, parms);
   if (prov.fetchError) throw Error("Fetch error", { cause: prov.fetchError });
@@ -191,19 +293,16 @@ const render = async (provider: Provider, params?: Partial<FetchParams>) => {
 
   const renderDirection = (departures: DepartureExt[]) => {
     if (!departures.length) {
-      return [`(none for  ${TIME_WINDOW_MINUTES} minutes)`];
+      return [`(none for  ${MAX_TIME_MINUTES} minutes)`];
     }
     const realisticDepartures = departures;
 
     // format line strings
     const lines = realisticDepartures.map((departure) => {
       const expectedTime = clampTime(departure.expectedTime);
-      const hurryStr =
-        departure.successProbPow < 1
-          ? departure.successProb < 0
-            ? "😵"
-            : "😱"
-          : "✨";
+      const hurryStr = departure.successProbPow < 1
+        ? departure.successProb < 0 ? "😵" : "😱"
+        : "✨";
 
       let timeLeft = "";
       if (departure.displayTime) timeLeft = departure.displayTime;
@@ -212,8 +311,7 @@ const render = async (provider: Provider, params?: Partial<FetchParams>) => {
         timeLeft = timeLeftMinutes < 1 ? "<1 min" : `${timeLeftMinutes} min`;
       }
 
-      const destStr =
-        STATION_NAME_REPLACEMENTS.get(departure.destination) ??
+      const destStr = STATION_NAME_REPLACEMENTS.get(departure.destination) ??
         departure.destination;
       return `${hurryStr} ${timeLeft} <span style="opacity: ${DEST_NAME_OPACITY}">${destStr}</span>`;
     });
@@ -227,7 +325,7 @@ const render = async (provider: Provider, params?: Partial<FetchParams>) => {
   const topLevelLines = renderDirection(mainDirectionDepartures ?? []);
 
   const otherDirectionKeys = Array.from(departuresByDirection.keys()).filter(
-    (k) => k !== mainDir
+    (k) => k !== mainDir,
   );
   const otherDirections = otherDirectionKeys.flatMap((k) =>
     renderDirection(departuresByDirection.get(k) ?? [])
@@ -245,58 +343,93 @@ const render = async (provider: Provider, params?: Partial<FetchParams>) => {
   return topLevelLinesHtml + "\n" + otherDirectionsHtml;
 };
 
-const doUpdate = () => {
-  Object.entries(providers)
-    .filter(([, provider]) => provider.autoUpdate)
-    .forEach(([providerName]) => {
-      void updateDepartures(providerName as Provider).catch((err) =>
-        log.error({ err }, "updateDepartures failed")
-      );
-    });
+const autoUpdate = () => {
+  Promise.allSettled(
+    Object.entries(providers)
+      .filter(([, provider]) => provider.autoUpdate)
+      .map(async ([providerName]) =>
+        updateDepartures(providerName as Provider).catch((err) =>
+          log.error({ err }, "updateDepartures failed")
+        )
+      ),
+  ).finally(() => {
+    // Schedule next update
+    if (FETCH_INTERVAL_MS && typeof FETCH_INTERVAL_MS === "number") {
+      setTimeout(autoUpdate, FETCH_INTERVAL_MS);
+    }
+  });
 };
 
-if (FETCH_INTERVAL_MS && typeof FETCH_INTERVAL_MS === "number") {
-  setInterval(doUpdate, FETCH_INTERVAL_MS);
-}
-doUpdate();
+autoUpdate();
 
 const app = new Elysia()
   .get("/", ({ redirect }) => {
+    log.info("GET /", { defaultProvider });
     return redirect(`/${defaultProvider}`, 303);
   })
-
+  .get("/help", ({ request, set }) => {
+    log.info("GET /help", { defaultProvider });
+    set.headers["content-type"] = "text/html";
+    return `
+    <html>
+    <head>  
+    <style>
+    body {
+      font-family: sans-serif;
+      font-size: 1.2rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0 0 0 2rem;
+    }
+    li {
+      margin-bottom: 1rem;
+    }
+    pre { display: inline; }
+    </style>
+    </head>
+    <body>
+    <h1>USAGE</h1>
+    <pre>${
+      new URL(request.url).origin
+    }/{provider}?stop_id=1234&mot=metro&dir=1&min_min=2&max_min=30</pre>
+    <ul>
+    <li><pre>provider</pre>: SL or VT</li>
+    <li><pre>stop_id</pre>: SL site ID or VT stop area GID</li>
+    <li><pre>dir</pre>: (optional) emphasize a direction (provider-specific)</li>
+    <li><pre>mot</pre>: (optional) filter to a mode of transport (provider-specific)</li>
+    <li><pre>min_min</pre>: (optional) filter to departures at least n minutes away (expected)</li>
+    <li><pre>max_min</pre>: (optional) filter to departures at most n minutes away (expected)</li>
+    <li><pre>limit</pre>: (optional) filter max n results</li>
+    </ul>
+    </body>
+    </html>
+    `;
+  })
   .get("/healthz", () => {
+    log.info("GET /healthz", { defaultProvider });
     return "OK";
   })
-
-  .get("/content", ({ redirect }) => {
-    return redirect(`/${defaultProvider}/content`, 303);
-  })
-
   .get(
     "/:provider",
     async ({ query, params: { provider: providerStr }, set, headers }) => {
       const provider = providerStr.toUpperCase() as Provider;
       const prov = p(provider);
-      log.info("GET /:provider", { provider }, headers["user-agent"], query);
-      if (prov.fetchError) {
-        throw prov.fetchError;
-      }
+      log.info(
+        "GET /:provider",
+        { providerStr, query, provider },
+        headers["user-agent"],
+      );
+
       set.headers["content-type"] = "text/html";
-      const { stop_id, mot, dir } = query ?? {};
-      const fetchParams: Partial<FetchParams> | undefined =
-        !!stop_id || !!mot || !!dir
-          ? {
-              stop_id: !!stop_id ? String(stop_id) : undefined,
-              mot: !!mot ? String(mot) : undefined,
-              dir: !!dir ? String(dir) : undefined,
-            }
-          : undefined;
+      const fetchParams = parseQueryFetchParams(query);
       const content = await render(provider, fetchParams);
       return getIndex({ name: provider, stopName: prov.stopName }, content);
-    }
+    },
   )
-
   .get(
     "/:provider/content",
     async ({ query, params: { provider: providerStr }, headers, set }) => {
@@ -305,25 +438,24 @@ const app = new Elysia()
         `GET /:provider/content`,
         { provider },
         headers["user-agent"],
-        query
+        query,
       );
       set.headers["content-type"] = "text/html";
       const { stop_id, mot, dir } = query ?? {};
       const fetchParams: Partial<FetchParams> | undefined =
         !!stop_id || !!mot || !!dir
           ? {
-              stop_id: !!stop_id ? String(stop_id) : undefined,
-              mot: !!mot ? String(mot) : undefined,
-              dir: !!dir ? String(dir) : undefined,
-            }
+            stop_id: !!stop_id ? String(stop_id) : undefined,
+            mot: !!mot ? String(mot) : undefined,
+            dir: !!dir ? String(dir) : undefined,
+          }
           : undefined;
       const content = await render(provider, fetchParams);
       return content;
-    }
+    },
   )
-
   .listen(conf.PORT);
 
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
 );

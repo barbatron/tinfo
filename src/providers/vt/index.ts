@@ -1,11 +1,11 @@
-import { Config } from "../../config";
-import { DepartureClient } from "../types";
+import { Config, MIN_TIME_MINUTES } from "../../config";
 import { Vt } from "./types";
 import { VtAuthClient } from "./vtAuthClient";
 import { VtPlaneraResaApiClient } from "./vtPlaneraResaApiClient";
 import { VtPlaneraResaStopAreaClient } from "./vtPlaneraResaStopAreaClient";
 import { StopAreasApi } from "./client/apis/StopAreasApi";
 import { Configuration, Middleware, RequestContext } from "./client";
+import { DepartureClient } from "../../types";
 
 const deviceId = `device_jold_${Date.now()}`;
 
@@ -26,7 +26,7 @@ export function createVtClient(config: Config): DepartureClient {
 
   const apiConfiguration = new Configuration({
     accessToken: authTokenAccessor,
-    // middleware: [logMiddleware],
+    ...(!!config.getString("TRACE", false) && { middleware: [logMiddleware] }),
   });
 
   const stopAreaClient = new VtPlaneraResaStopAreaClient({
@@ -37,7 +37,5 @@ export function createVtClient(config: Config): DepartureClient {
   return new VtPlaneraResaApiClient({
     api: stopAreasApi,
     stopAreaClient,
-    stopAreaGid: config.getString("VT_STOP_AREA_GID", true)!,
-    timeWindowMinutes: config.getNumber("TIME_WINDOW_MINUTES", false) ?? 30,
   });
 }

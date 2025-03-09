@@ -35,7 +35,7 @@ const scrollScript = `
 
 const getIndex = (
   p: { name: "SL" | "VT"; stopName: string },
-  content?: string
+  content?: string,
 ) => `
   <!DOCTYPE html>
   <html lang="en">

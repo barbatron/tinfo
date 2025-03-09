@@ -2,7 +2,7 @@ import { log } from "./log";
 
 type ConfigAccessor<T, TReq extends boolean> = (
   key: string,
-  required: TReq
+  required: TReq,
 ) => TReq extends true ? T : T | null;
 
 export interface Config {
@@ -10,12 +10,12 @@ export interface Config {
   getNumber: ConfigAccessor<number, boolean>;
 }
 
-const env = Bun.env;
+const env = process.env;
 
 const PORT = env.PORT ? Number(env.PORT) : 8000;
 
-const TIME_WINDOW_MINUTES: number = !!env.TIME_WINDOW_MINUTES
-  ? Number(env.TIME_WINDOW_MINUTES)
+const MAX_TIME_MINUTES: number = !!env.MAX_TIME_MINUTES
+  ? Number(env.MAX_TIME_MINUTES)
   : 20;
 const FETCH_INTERVAL_MS = !!env.FETCH_INTERVAL_MS
   ? Number(env.FETCH_INTERVAL_MS)
@@ -26,6 +26,7 @@ const REFRESH_INTERVAL_MS = !!env.REFRESH_INTERVAL_MS
 
 const WALK_TIME_SECONDS = Number(env.WALK_TIME_SECONDS || 300);
 const RUSH_SECONDS_GAINED = Number(env.RUSH_SECONDS_GAINED || 90);
+
 const MIN_TIME_MINUTES = Number(env.MIN_TIME_MINUTES || 5);
 
 const STATION_NAME_REPLACEMENTS = new Map([
@@ -39,21 +40,27 @@ const DEST_BLOCK_MARGIN_BOT = "2.5rem";
 log.info(
   {
     PORT,
-    TIME_WINDOW_MINUTES,
+    MAX_TIME_MINUTES,
     FETCH_INTERVAL_MS,
     REFRESH_INTERVAL_MS,
     WALK_TIME_SECONDS,
     RUSH_SECONDS_GAINED,
     MIN_TIME_MINUTES,
   },
-  "CONFIG"
+  "CONFIG",
 );
 
 export const fromEnv: Config = {
   getString: function <T extends boolean>(key: string, required?: T) {
     const isPresent = key in env && !!env[key];
+    console.debug("fromEnv.getString", {
+      key,
+      isPresent,
+      required,
+      value: env[key],
+    });
     if (required && !isPresent) throw Error("Missing/empty config: " + key);
-    const value = String(env[key]!);
+    const value = env[key] || null;
     return value;
   },
   getNumber: function (key: string, required = true) {
@@ -89,11 +96,11 @@ export {
   DEST_FONT_SIZE,
   DEST_NAME_OPACITY,
   FETCH_INTERVAL_MS,
+  MAX_TIME_MINUTES,
+  MIN_TIME_MINUTES,
   PORT,
   REFRESH_INTERVAL_MS,
   RUSH_SECONDS_GAINED,
   STATION_NAME_REPLACEMENTS,
-  TIME_WINDOW_MINUTES,
   WALK_TIME_SECONDS,
-  MIN_TIME_MINUTES,
 };

@@ -19,7 +19,7 @@ export class SlTransportSiteClient {
   public constructor(
     conf?: Partial<{
       apiUrl: string;
-    }>
+    }>,
   ) {
     this.conf = { ...defaultConfig, ...conf };
   }
@@ -27,7 +27,7 @@ export class SlTransportSiteClient {
   private async lookupRemote(name: string): Promise<Sl.TransportApi.Site> {
     const response = await fetch(this.conf.apiUrl);
 
-    if (!response.ok)
+    if (!response.ok) {
       throw Error(
         "[sl site] Request failed: " +
           response.statusText +
@@ -35,19 +35,22 @@ export class SlTransportSiteClient {
           JSON.stringify(
             { url: response.url, responseHeaders: response.headers },
             null,
-            2
-          )
+            2,
+          ),
       );
+    }
 
     const data = (await response.json()) as Sl.TransportApi.SitesResponse;
-
-    const exactMatch = data.find((site) => site.name === name);
+    const nameLower = name.toLowerCase();
+    const exactMatch = data.find((site) =>
+      site.name.toLowerCase() === nameLower
+    );
     if (exactMatch) {
       return exactMatch;
     }
 
     const siteMatcher = (site: Sl.TransportApi.Site) =>
-      site.name.startsWith(name);
+      site.name.toLowerCase().startsWith(nameLower);
     const matchingSites = data.filter(siteMatcher);
     if (matchingSites.length === 0) {
       throw Error(`No site found for ${name}`);
@@ -61,16 +64,18 @@ export class SlTransportSiteClient {
 
   public async lookup(name: string): Promise<Result> {
     if (Number.isInteger(Number(name))) {
+      log.trace("[sl site] Numeric site id", name);
       return { id: name };
     }
-    if (this.lookupCache.has(name)) {
-      log.debug("[sl site] Cache hit", name);
-      return this.lookupCache.get(name)!;
+    const nameLower = name.toLowerCase();
+    if (this.lookupCache.has(nameLower)) {
+      log.debug("[sl site] Cache hit", nameLower);
+      return this.lookupCache.get(nameLower)!;
     }
-    log.debug("[sl site] Cache miss", name);
+    log.debug("[sl site] Cache miss", nameLower);
     const remoteResult = await this.lookupRemote(name);
     const result = { id: String(remoteResult.id) };
-    this.lookupCache.set(name, result);
+    this.lookupCache.set(nameLower, result);
     return result;
   }
 }
