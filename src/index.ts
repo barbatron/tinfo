@@ -388,6 +388,11 @@ const app = new Elysia()
       );
       set.headers["content-type"] = "text/html";
       const fetchParams = parseQueryFetchParams(query);
+      if (headers.accept === "application/json") {
+        const departures = await updateDepartures(provider, fetchParams);
+        set.headers["content-type"] = "application/json";
+        return decorateDepartures(departures);
+      }
       const content = await render(provider, fetchParams);
       return getIndex({ name: provider, stopName: prov.stopName }, content);
     },
@@ -402,16 +407,13 @@ const app = new Elysia()
         headers["user-agent"],
         query,
       );
+      const fetchParams = parseQueryFetchParams(query);
+      if (headers.accept === "application/json") {
+        const departures = await updateDepartures(provider, fetchParams);
+        set.headers["content-type"] = "application/json";
+        return decorateDepartures(departures);
+      }
       set.headers["content-type"] = "text/html";
-      const { stop_id, mot, dir } = query ?? {};
-      const fetchParams: Partial<FetchParams> | undefined =
-        !!stop_id || !!mot || !!dir
-          ? {
-            stop_id: !!stop_id ? String(stop_id) : undefined,
-            mot: !!mot ? String(mot) : undefined,
-            dir: !!dir ? String(dir) : undefined,
-          }
-          : undefined;
       const content = await render(provider, fetchParams);
       return content;
     },
