@@ -1,11 +1,11 @@
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime.js";
-import localeData from "dayjs/plugin/localeData.js";
-import updateLocale from "dayjs/plugin/updateLocale.js";
+import dayjs from "dayjs"
+import relativeTime from "dayjs/plugin/relativeTime.js"
+import localeData from "dayjs/plugin/localeData.js"
+import updateLocale from "dayjs/plugin/updateLocale.js"
 
-dayjs.extend(relativeTime);
-dayjs.extend(localeData);
-dayjs.extend(updateLocale);
+dayjs.extend(relativeTime)
+dayjs.extend(localeData)
+dayjs.extend(updateLocale)
 
 dayjs.updateLocale("en", {
   relativeTime: {
@@ -23,4 +23,4 @@ dayjs.updateLocale("en", {
     y: "a year",
     yy: "%d years",
   },
-});
+})

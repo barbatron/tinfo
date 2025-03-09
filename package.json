@@ -16,6 +16,7 @@
     "format": "prettier --write src/**/*.ts"
   },
   "dependencies": {
+    "@elysiajs/html": "^1.2.0",
     "dayjs": "^1.11.13",
     "elysia": "latest"
   },

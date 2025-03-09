@@ -4,4 +4,4 @@ export const log = {
     process.env.DEBUG && console.debug.apply(console, args),
   trace: (...args: unknown[]) =>
     process.env.TRACE && console.trace.apply(console, args),
-}; // pino({ ...prettyOpts });
+} // pino({ ...prettyOpts });
