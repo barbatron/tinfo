@@ -1,4 +1,5 @@
-import { DEST_FONT_SIZE, PAGE_INFO } from "./config"
+import { DEST_FONT_SIZE, PAGE_INFO } from "./config";
+import { Provider } from "./types";
 
 const scrollScript = `
 (function() {
@@ -31,11 +32,11 @@ const scrollScript = `
       }, false );
     }
   }
-})();`
+})();`;
 
 const getIndex = (
-  p: { name: "SL" | "VT"; stopName: string },
-  content?: string
+  p: { name: Provider; stopName: string },
+  content?: string,
 ) => `
   <!DOCTYPE html>
   <html lang="en">
@@ -114,9 +115,9 @@ const getIndex = (
       </script>
     </body>
   </html>
-  `
+  `;
 
-export default getIndex
+export default getIndex;
 
 export const getHelp = (origin: string) => {
   return `
@@ -159,5 +160,5 @@ export const getHelp = (origin: string) => {
       </ul>
       </body>
       </html>
-      `
-}
+      `;
+};

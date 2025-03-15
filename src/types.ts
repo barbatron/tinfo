@@ -1,34 +1,42 @@
 export interface Departure {
-  scheduledTime: Date
-  expectedTime: Date
-  displayTime?: string
-  destination: string
-  direction?: string
-  mot?: string
+  scheduledTime: Date;
+  expectedTime: Date;
+  displayTime?: string;
+  destination: string;
+  direction?: string;
+  mot?: string;
 }
 
 export interface DepartureExt extends Departure {
-  successProbPow: number
-  successProb: number
-  expectedInSeconds: number
-  scheduleDriftSeconds: number
+  successProbPow: number;
+  successProb: number;
+  expectedInSeconds: number;
+  scheduleDriftSeconds: number;
 }
 
 export type FetchParams = {
   // SL site ID or VT stop area GID
-  stop_id: string
+  stop_id: string;
   // Direction - provider-dependent
-  dir?: string | undefined
+  dir?: string | undefined;
   // Preferred mode of transport
-  mot?: string | undefined
+  mot?: string | undefined;
   // Minimum time until departure, in minutes
-  min_min?: number | undefined
+  min_min?: number | undefined;
   // Minimum time until departure, in minutes
-  max_min?: number | undefined
+  max_min?: number | undefined;
   // Max number of departures
-  limit?: number | undefined
-}
+  limit?: number | undefined;
+};
+
+export type MinimumFetchParams =
+  & Partial<FetchParams>
+  & Pick<FetchParams, "stop_id">;
+
+export type DeparturesError = Error;
 
 export interface DepartureClient {
-  fetch(params: FetchParams): Promise<Departure[]>
+  fetch(params: FetchParams): Promise<Departure[]>;
 }
+
+export type Provider = "SL" | "VT";
