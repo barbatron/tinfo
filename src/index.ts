@@ -196,8 +196,10 @@ const updateDepartures = async (
       })),
     })
     const departures = allDepartures
-      // Filter out non-metro departures
-      .filter((d) => !preferredMot || d.mot === preferredMot)
+      // Filter out unwanted modes of transportation
+      .filter(
+        (d) => !preferredMot || new RegExp(preferredMot).test(d.mot ?? "")
+      )
       // Filter out departures that are too near in the future
       .filter(
         (d: Departure) =>
