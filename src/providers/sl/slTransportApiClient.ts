@@ -1,4 +1,3 @@
-import dayjs from "dayjs"
 import { log } from "../../log.js"
 import { Departure, DepartureClient, FetchParams } from "../../types.js"
 import { Sl } from "./types.js"
@@ -7,11 +6,10 @@ import { SlTransportSiteClient } from "./slTransportSiteClient.js"
 type Config = {
   apiUrl: string
   siteClient: SlTransportSiteClient
-  defaultFetchParams: FetchParams
 }
 
 export class SlTransportApiClient implements DepartureClient {
-  public constructor(private readonly conf: Config) {
+  public constructor(private readonly conf: Readonly<Config>) {
     console.log(SlTransportApiClient.name, this.conf)
   }
 

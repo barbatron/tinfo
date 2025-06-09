@@ -7,16 +7,12 @@ const SL_TRANSPORT_DEPARTURES_API_URL =
   "https://transport.integration.sl.se/v1/sites/{siteId}/departures"
 
 export function createSlTransportApiClient(config: Config): DepartureClient {
-  const siteId = config.getString("SL_SITE_ID", true)!
-  const timeWindowMinutes = config.getNumber("MAX_TIME_MINUTES", false) || 30
   const apiUrl =
     config.getString("SL_TRANSPORT_DEPARTURES_API_URL", false) ||
     SL_TRANSPORT_DEPARTURES_API_URL
   const siteClient = new SlTransportSiteClient()
   return new SlTransportApiClient({
     apiUrl,
-    siteId,
-    timeWindowMinutes,
     siteClient,
   })
 }
