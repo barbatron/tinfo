@@ -14,7 +14,6 @@ import {
   // General API
   MAX_TIME_MINUTES,
   MIN_TIME_MINUTES,
-  PAGE_INFO,
   RUSH_SECONDS_GAINED,
   // Esthetic
   STATION_NAME_REPLACEMENTS,
@@ -24,9 +23,10 @@ import {
 import { createSlTransportApiClient } from "./providers/sl"
 import { Departure, DepartureClient, DepartureExt, FetchParams } from "./types"
 
+import html from "@elysiajs/html"
+import swagger from "@elysiajs/swagger"
 import * as conf from "./config"
 import { createVtClient } from "./providers/vt"
-import html from "@elysiajs/html"
 
 const config = conf.fromEnv
 
@@ -375,6 +375,7 @@ const app = new Elysia()
   })
 
   .use(html())
+  .use(swagger())
   .get("/help", ({ request, set }) => {
     log.info("GET /help", { defaultProvider })
     set.headers["content-type"] = "text/html"
